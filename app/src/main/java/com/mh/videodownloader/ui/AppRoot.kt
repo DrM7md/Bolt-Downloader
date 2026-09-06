@@ -1,0 +1,131 @@
+package com.mh.videodownloader.ui
+
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.History
+import androidx.compose.material.icons.rounded.Home
+import androidx.compose.material.icons.rounded.Settings
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.NavigationBar
+import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.NavigationBarItemDefaults
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavDestination.Companion.hierarchy
+import androidx.navigation.NavGraph.Companion.findStartDestination
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
+import androidx.navigation.compose.rememberNavController
+import com.mh.videodownloader.R
+import com.mh.videodownloader.ui.history.HistoryScreen
+import com.mh.videodownloader.ui.history.HistoryViewModel
+import com.mh.videodownloader.ui.home.HomeScreen
+import com.mh.videodownloader.ui.home.HomeViewModel
+import com.mh.videodownloader.ui.settings.SettingsScreen
+import com.mh.videodownloader.ui.settings.SettingsViewModel
+
+private enum class Destination(
+    val route: String,
+    val labelRes: Int,
+    val icon: ImageVector,
+) {
+    HOME("home", R.string.tab_home, Icons.Rounded.Home),
+    HISTORY("history", R.string.tab_history, Icons.Rounded.History),
+    SETTINGS("settings", R.string.tab_settings, Icons.Rounded.Settings),
+}
+
+@Composable
+fun AppRoot(
+    homeViewModel: HomeViewModel = viewModel(),
+    historyViewModel: HistoryViewModel = viewModel(),
+    settingsViewModel: SettingsViewModel = viewModel(),
+) {
+    val navController = rememberNavController()
+    val snackbarHostState = remember { SnackbarHostState() }
+    val backStackEntry by navController.currentBackStackEntryAsState()
+    val currentDestination = backStackEntry?.destination
+
+    val homeMessage by homeViewModel.message.collectAsStateWithLifecycle()
+    val settingsMessage by settingsViewModel.message.collectAsStateWithLifecycle()
+
+    val homeText = homeMessage?.let { stringResource(it) }
+    LaunchedEffect(homeMessage) {
+        homeText?.let {
+            snackbarHostState.showSnackbar(it)
+            homeViewModel.consumeMessage()
+        }
+    }
+    val settingsText = settingsMessage?.let { stringResource(it) }
+    LaunchedEffect(settingsMessage) {
+        settingsText?.let {
+            snackbarHostState.showSnackbar(it)
+            settingsViewModel.consumeMessage()
+        }
+    }
+
+    Scaffold(
+        contentWindowInsets = WindowInsets(0, 0, 0, 0),
+        snackbarHost = { SnackbarHost(snackbarHostState) },
+        bottomBar = {
+            NavigationBar(
+                containerColor = MaterialTheme.colorScheme.surfaceContainer,
+                tonalElevation = 0.dp,
+            ) {
+                Destination.entries.forEach { destination ->
+                    val selected = currentDestination?.hierarchy
+                        ?.any { it.route == destination.route } == true
+                    NavigationBarItem(
+                        selected = selected,
+                        onClick = {
+                            navController.navigate(destination.route) {
+                                popUpTo(navController.graph.findStartDestination().id) {
+                                    saveState = true
+                                }
+                                launchSingleTop = true
+                                restoreState = true
+                            }
+                        },
+                        icon = { Icon(destination.icon, contentDescription = null) },
+                        label = { Text(stringResource(destination.labelRes)) },
+                        colors = NavigationBarItemDefaults.colors(
+                            selectedIconColor = MaterialTheme.colorScheme.primary,
+                            selectedTextColor = MaterialTheme.colorScheme.primary,
+                            indicatorColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.14f),
+                        ),
+                    )
+                }
+            }
+        },
+    ) { innerPadding ->
+        NavHost(
+            navController = navController,
+            startDestination = Destination.HOME.route,
+            modifier = Modifier.fillMaxSize(),
+        ) {
+            composable(Destination.HOME.route) {
+                HomeScreen(viewModel = homeViewModel, contentPadding = innerPadding)
+            }
+            composable(Destination.HISTORY.route) {
+                HistoryScreen(viewModel = historyViewModel, contentPadding = innerPadding)
+            }
+            composable(Destination.SETTINGS.route) {
+                SettingsScreen(viewModel = settingsViewModel, contentPadding = innerPadding)
+            }
+        }
+    }
+}

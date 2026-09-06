@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- yt-dlp ships as a raw resource that only library code reads; keep the shrinker off it. -->
+<resources xmlns:tools="http://schemas.android.com/tools"
+    tools:keep="@raw/*" />
