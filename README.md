@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="docs/banner.png" alt="مُحمّل الفيديو — Video Downloader" width="820">
+</p>
+
 # مُحمّل الفيديو — Video Downloader
 
 تطبيق أندرويد شخصي لتحميل الوسائط من الروابط، مبني على **yt-dlp** و**ffmpeg** مضمّنين داخل
@@ -106,6 +110,25 @@ adb install -r app/build/outputs/apk/release/app-arm64-v8a-release.apk
   أولًا (يحل أغلب الحالات)، وإن استمر فاستورد ملف cookies من الإعدادات → متقدم.
 - **إنستغرام** يحجب كثيرًا من الروابط بدون تسجيل دخول؛ ملف cookies هو الحل، واعتبره "أفضل جهد".
 - الأحجام المعروضة **تقريبية**: تُحسب من `filesize` حين يوفّره الموقع، وإلا من متوسط البتريت.
+
+## الهوية البصرية
+
+<img src="docs/icon-512.png" width="96" align="left" hspace="18" vspace="4" alt="أيقونة التطبيق">
+
+الشعار سهم تحميل داخل **حلقة تقدّم**: القوس المضيء هو الجزء المكتمل والباهت هو المتبقّي، والفتحة
+في الأسفل هي المخرج الذي ينزل منه السهم. يقول الشعار "جارٍ التحميل" لا "للأسفل" فحسب، ويبقى
+مقروءًا حتى 24 بكسل.
+
+الألوان: بنفسجي `#7C5CFF` ← `#5B3BE8` ← سماوي `#00B4D8` بتدرّج قطري. الخط Cairo.
+
+<br clear="left">
+
+| الملف | الاستخدام |
+|---|---|
+| [`ic_launcher_foreground.xml`](app/src/main/res/drawable/ic_launcher_foreground.xml) | العلامة الكاملة داخل الأيقونة المتكيّفة (adaptive icon) |
+| [`ic_launcher_monochrome.xml`](app/src/main/res/drawable/ic_launcher_monochrome.xml) | طبقة الأيقونات المُلوّنة بالنظام (Android 13+) |
+| [`ic_brand_glyph.xml`](app/src/main/res/drawable/ic_brand_glyph.xml) | نسخة مبسّطة (سهم + قاعدة) للاستخدام الصغير داخل التطبيق |
+| [`docs/icon-512.png`](docs/icon-512.png) · [`docs/banner.png`](docs/banner.png) | أصول جاهزة للعرض والمشاركة |
 
 ## الترخيص والاستخدام
 

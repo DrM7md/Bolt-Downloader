@@ -235,7 +235,7 @@ private fun Hero(modifier: Modifier = Modifier) {
                     contentAlignment = Alignment.Center,
                 ) {
                     Icon(
-                        Icons.Rounded.Download,
+                        painter = androidx.compose.ui.res.painterResource(R.drawable.ic_brand_glyph),
                         contentDescription = null,
                         tint = Color.White,
                         modifier = Modifier.size(24.dp),

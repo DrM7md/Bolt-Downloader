@@ -1,14 +1,36 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+  The brand mark: a download arrow inside a progress ring whose sweep is bright and whose
+  remaining track is faded — the icon says "downloading", not just "down".
+  Everything sits inside the 66dp safe circle of the 108dp adaptive canvas.
+-->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="108dp"
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
+
+    <!-- filled sweep: 115° -> 340° clockwise -->
     <path
-        android:pathData="M49,26 L59,26 L59,53 L70,53 L54,73 L38,53 L49,53 Z"
-        android:fillColor="#FFFFFFFF" />
+        android:pathData="M42.59,78.47 A 27 27 0 1 1 79.37,44.77"
+        android:fillColor="#00000000"
+        android:strokeColor="#FFFFFFFF"
+        android:strokeWidth="7"
+        android:strokeLineCap="round" />
+
+    <!-- remaining track: 340° -> 65°, leaving a gap at the bottom -->
     <path
-        android:pathData="M35,79 L73,79 A3,3 0 0,1 73,86 L35,86 A3,3 0 0,1 35,79 Z"
+        android:pathData="M79.37,44.77 A 27 27 0 0 1 65.41,78.47"
+        android:fillColor="#00000000"
+        android:strokeColor="#FFFFFFFF"
+        android:strokeAlpha="0.38"
+        android:strokeWidth="7"
+        android:strokeLineCap="round" />
+
+    <path
+        android:pathData="M51,39 L57,39 L57,52 L65,52 L54,66 L43,52 L51,52 Z"
         android:fillColor="#FFFFFFFF"
-        android:fillAlpha="0.92" />
+        android:strokeColor="#FFFFFFFF"
+        android:strokeWidth="3"
+        android:strokeLineJoin="round" />
 </vector>
