@@ -5,6 +5,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -163,95 +164,108 @@ private fun HistoryCard(
     modifier: Modifier = Modifier,
 ) {
     AppCard(modifier = modifier) {
-        Row(
-            modifier = Modifier.padding(12.dp),
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Box(
-                modifier = Modifier
-                    .size(width = 92.dp, height = 62.dp)
-                    .clip(RoundedCornerShape(12.dp))
-                    .background(MaterialTheme.colorScheme.surfaceContainerHighest),
-                contentAlignment = Alignment.Center,
+        Column(modifier = Modifier.padding(12.dp)) {
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                verticalAlignment = Alignment.CenterVertically,
             ) {
-                if (entry.thumbnail != null) {
-                    AsyncImage(
-                        model = entry.thumbnail,
-                        contentDescription = null,
-                        modifier = Modifier.matchParentSize(),
-                        contentScale = ContentScale.Crop,
-                    )
-                }
                 Box(
                     modifier = Modifier
-                        .size(26.dp)
-                        .clip(CircleShape)
-                        .background(Color.Black.copy(alpha = 0.45f)),
+                        .size(width = 92.dp, height = 62.dp)
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(MaterialTheme.colorScheme.surfaceContainerHighest),
                     contentAlignment = Alignment.Center,
                 ) {
-                    Icon(
-                        if (entry.isAudio) Icons.Rounded.MusicNote else Icons.Rounded.PlayArrow,
-                        contentDescription = null,
-                        tint = Color.White,
-                        modifier = Modifier.size(16.dp),
+                    if (entry.thumbnail != null) {
+                        AsyncImage(
+                            model = entry.thumbnail,
+                            contentDescription = null,
+                            modifier = Modifier.matchParentSize(),
+                            contentScale = ContentScale.Crop,
+                        )
+                    }
+                    Box(
+                        modifier = Modifier
+                            .size(26.dp)
+                            .clip(CircleShape)
+                            .background(Color.Black.copy(alpha = 0.45f)),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Icon(
+                            if (entry.isAudio) Icons.Rounded.MusicNote else Icons.Rounded.PlayArrow,
+                            contentDescription = null,
+                            tint = Color.White,
+                            modifier = Modifier.size(16.dp),
+                        )
+                    }
+                }
+
+                Column(
+                    modifier = Modifier.weight(1f),
+                    verticalArrangement = Arrangement.spacedBy(6.dp),
+                ) {
+                    Text(
+                        text = entry.title,
+                        style = MaterialTheme.typography.titleSmall,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis,
                     )
+                    // A long title plus three chips overflows a narrow screen, so they wrap
+                    // onto a second line rather than squeezing the last one.
+                    FlowRow(
+                        horizontalArrangement = Arrangement.spacedBy(6.dp),
+                        verticalArrangement = Arrangement.spacedBy(6.dp),
+                    ) {
+                        Chip(text = entry.sourceLabel)
+                        formatBytes(entry.sizeBytes)?.let {
+                            Chip(
+                                text = ltr(it),
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                containerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
+                            )
+                        }
+                        if (entry.durationSec > 0) {
+                            Chip(
+                                text = ltr(formatDuration(entry.durationSec)),
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                containerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
+                            )
+                        }
+                    }
                 }
             }
 
-            Column(
-                modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.spacedBy(6.dp),
-            ) {
+            Spacer(Modifier.height(8.dp))
+
+            // The actions take the full card width rather than sharing the text column: beside
+            // the thumbnail, three buttons and the date do not fit on a 360dp screen.
+            Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
-                    text = entry.title,
-                    style = MaterialTheme.typography.titleSmall,
-                    maxLines = 2,
+                    text = ltr(formatDate(entry.createdAt)),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.weight(1f),
                 )
-                Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                    Chip(text = entry.sourceLabel)
-                    formatBytes(entry.sizeBytes)?.let {
-                        Chip(
-                            text = ltr(it),
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            containerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
-                        )
-                    }
-                    if (entry.durationSec > 0) {
-                        Chip(
-                            text = ltr(formatDuration(entry.durationSec)),
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            containerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
-                        )
-                    }
-                }
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(
-                        text = ltr(formatDate(entry.createdAt)),
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.weight(1f),
-                    )
-                    CardAction(
-                        icon = Icons.Rounded.PlayArrow,
-                        description = stringResource(R.string.open),
-                        tint = MaterialTheme.colorScheme.primary,
-                        onClick = onOpen,
-                    )
-                    CardAction(
-                        icon = Icons.Rounded.Share,
-                        description = stringResource(R.string.share),
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                        onClick = onShare,
-                    )
-                    CardAction(
-                        icon = Icons.Rounded.DeleteOutline,
-                        description = stringResource(R.string.delete),
-                        tint = MaterialTheme.colorScheme.error,
-                        onClick = onDelete,
-                    )
-                }
+                CardAction(
+                    icon = Icons.Rounded.PlayArrow,
+                    description = stringResource(R.string.open),
+                    tint = MaterialTheme.colorScheme.primary,
+                    onClick = onOpen,
+                )
+                CardAction(
+                    icon = Icons.Rounded.Share,
+                    description = stringResource(R.string.share),
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    onClick = onShare,
+                )
+                CardAction(
+                    icon = Icons.Rounded.DeleteOutline,
+                    description = stringResource(R.string.delete),
+                    tint = MaterialTheme.colorScheme.error,
+                    onClick = onDelete,
+                )
             }
         }
     }
@@ -264,7 +278,7 @@ private fun CardAction(
     tint: Color,
     onClick: () -> Unit,
 ) {
-    IconButton(onClick = onClick, modifier = Modifier.size(38.dp)) {
-        Icon(icon, contentDescription = description, tint = tint, modifier = Modifier.size(21.dp))
+    IconButton(onClick = onClick, modifier = Modifier.size(34.dp)) {
+        Icon(icon, contentDescription = description, tint = tint, modifier = Modifier.size(19.dp))
     }
 }

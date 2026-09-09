@@ -37,6 +37,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.mh.videodownloader.ui.theme.brandGradient
 
@@ -141,7 +142,13 @@ fun Chip(
         icon?.let {
             Icon(it, contentDescription = null, tint = color, modifier = Modifier.size(14.dp))
         }
-        Text(text = text, style = MaterialTheme.typography.labelMedium, color = color)
+        Text(
+            text = text,
+            style = MaterialTheme.typography.labelMedium,
+            color = color,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+        )
     }
 }
 
