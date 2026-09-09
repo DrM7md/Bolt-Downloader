@@ -108,4 +108,7 @@
     <string name="engine_update_failed_short">Engine update failed</string>
     <string name="idle_title">Start by pasting a link</string>
     <string name="idle_subtitle">Or share one straight from any app — analysis starts on its own</string>
+    <string name="share">Share</string>
+    <string name="share_via">Share file via</string>
+    <string name="cannot_share">Could not share the file</string>
 </resources>

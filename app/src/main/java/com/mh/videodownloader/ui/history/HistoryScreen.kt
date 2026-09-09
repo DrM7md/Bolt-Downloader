@@ -1,6 +1,6 @@
 package com.mh.videodownloader.ui.history
 
-import android.content.Intent
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -22,6 +22,7 @@ import androidx.compose.material.icons.rounded.DeleteOutline
 import androidx.compose.material.icons.rounded.History
 import androidx.compose.material.icons.rounded.MusicNote
 import androidx.compose.material.icons.rounded.PlayArrow
+import androidx.compose.material.icons.rounded.Share
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -29,6 +30,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -42,7 +44,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.core.net.toUri
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.compose.AsyncImage
 import com.mh.videodownloader.R
@@ -54,6 +55,8 @@ import com.mh.videodownloader.util.formatBytes
 import com.mh.videodownloader.util.formatDate
 import com.mh.videodownloader.util.formatDuration
 import com.mh.videodownloader.util.ltr
+import com.mh.videodownloader.util.openMedia
+import com.mh.videodownloader.util.shareMedia
 
 @Composable
 fun HistoryScreen(
@@ -64,6 +67,7 @@ fun HistoryScreen(
     val entries by viewModel.entries.collectAsStateWithLifecycle()
     val context = LocalContext.current
     var pendingDelete by remember { mutableStateOf<HistoryEntry?>(null) }
+    var failure by remember { mutableStateOf<Int?>(null) }
 
     Column(modifier = modifier.fillMaxWidth()) {
         Row(
@@ -107,18 +111,26 @@ fun HistoryScreen(
                 HistoryCard(
                     entry = entry,
                     onOpen = {
-                        val intent = Intent(Intent.ACTION_VIEW).apply {
-                            setDataAndType(entry.fileUri.toUri(), entry.mimeType)
-                            addFlags(
-                                Intent.FLAG_GRANT_READ_URI_PERMISSION or
-                                    Intent.FLAG_ACTIVITY_NEW_TASK
-                            )
+                        if (!openMedia(context, entry.fileUri, entry.mimeType)) {
+                            failure = R.string.cannot_open_file
                         }
-                        runCatching { context.startActivity(intent) }
+                    },
+                    onShare = {
+                        if (!shareMedia(context, entry.fileUri, entry.mimeType, entry.title)) {
+                            failure = R.string.cannot_share
+                        }
                     },
                     onDelete = { pendingDelete = entry },
                 )
             }
+        }
+    }
+
+    failure?.let { messageRes ->
+        val text = stringResource(messageRes)
+        LaunchedEffect(messageRes) {
+            Toast.makeText(context, text, Toast.LENGTH_SHORT).show()
+            failure = null
         }
     }
 
@@ -146,6 +158,7 @@ fun HistoryScreen(
 private fun HistoryCard(
     entry: HistoryEntry,
     onOpen: () -> Unit,
+    onShare: () -> Unit,
     onDelete: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -213,30 +226,45 @@ private fun HistoryCard(
                         )
                     }
                 }
-                Text(
-                    text = ltr(formatDate(entry.createdAt)),
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-            }
-
-            Column {
-                IconButton(onClick = onOpen) {
-                    Icon(
-                        Icons.Rounded.PlayArrow,
-                        contentDescription = stringResource(R.string.open),
-                        tint = MaterialTheme.colorScheme.primary,
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        text = ltr(formatDate(entry.createdAt)),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.weight(1f),
                     )
-                }
-                Spacer(Modifier.height(2.dp))
-                IconButton(onClick = onDelete) {
-                    Icon(
-                        Icons.Rounded.DeleteOutline,
-                        contentDescription = stringResource(R.string.delete),
+                    CardAction(
+                        icon = Icons.Rounded.PlayArrow,
+                        description = stringResource(R.string.open),
+                        tint = MaterialTheme.colorScheme.primary,
+                        onClick = onOpen,
+                    )
+                    CardAction(
+                        icon = Icons.Rounded.Share,
+                        description = stringResource(R.string.share),
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        onClick = onShare,
+                    )
+                    CardAction(
+                        icon = Icons.Rounded.DeleteOutline,
+                        description = stringResource(R.string.delete),
                         tint = MaterialTheme.colorScheme.error,
+                        onClick = onDelete,
                     )
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun CardAction(
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    description: String,
+    tint: Color,
+    onClick: () -> Unit,
+) {
+    IconButton(onClick = onClick, modifier = Modifier.size(38.dp)) {
+        Icon(icon, contentDescription = description, tint = tint, modifier = Modifier.size(21.dp))
     }
 }

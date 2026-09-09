@@ -118,4 +118,7 @@
     <string name="engine_update_failed_short">فشل تحديث المحرّك</string>
     <string name="idle_title">ابدأ بلصق رابط</string>
     <string name="idle_subtitle">أو شارك الرابط مباشرة من أي تطبيق — وسيبدأ التحليل وحده</string>
+    <string name="share">مشاركة</string>
+    <string name="share_via">مشاركة الملف عبر</string>
+    <string name="cannot_share">تعذّرت مشاركة الملف</string>
 </resources>

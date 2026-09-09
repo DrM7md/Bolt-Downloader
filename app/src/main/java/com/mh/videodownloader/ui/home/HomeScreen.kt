@@ -1,6 +1,5 @@
 package com.mh.videodownloader.ui.home
 
-import android.content.Intent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateFloatAsState
@@ -67,7 +66,6 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextDirection
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.core.net.toUri
 import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.compose.AsyncImage
@@ -90,6 +88,7 @@ import com.mh.videodownloader.util.formatBytes
 import com.mh.videodownloader.util.formatDuration
 import com.mh.videodownloader.util.formatEta
 import com.mh.videodownloader.util.ltr
+import com.mh.videodownloader.util.openMedia
 import com.mh.videodownloader.util.percentOf
 
 @Composable
@@ -192,17 +191,11 @@ fun HomeScreen(
                     onDismiss = { viewModel.dismissTask(task.id) },
                     onOpen = {
                         task.savedUri?.let { uri ->
-                            val intent = Intent(Intent.ACTION_VIEW).apply {
-                                setDataAndType(
-                                    uri.toUri(),
-                                    if (task.selection.isAudio) "audio/mpeg" else "video/mp4",
-                                )
-                                addFlags(
-                                    Intent.FLAG_GRANT_READ_URI_PERMISSION or
-                                        Intent.FLAG_ACTIVITY_NEW_TASK
-                                )
-                            }
-                            runCatching { context.startActivity(intent) }
+                            openMedia(
+                                context,
+                                uri,
+                                if (task.selection.isAudio) "audio/mpeg" else "video/mp4",
+                            )
                         }
                     },
                     modifier = Modifier.padding(horizontal = 16.dp, vertical = 5.dp),

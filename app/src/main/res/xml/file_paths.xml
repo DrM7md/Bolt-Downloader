@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Only the public downloads folder is exposed, and only so that Android 8–9 (where files are
+  real paths rather than MediaStore URIs) can share what the app saved there.
+-->
+<paths>
+    <external-path
+        name="public_downloads"
+        path="Download/" />
+</paths>
