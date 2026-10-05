@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">مُحمّل الفيديو</string>
+    <string name="app_name">محمل الفيديو</string>
 
     <!-- Navigation -->
     <string name="tab_home">الرئيسية</string>
@@ -14,7 +14,7 @@
     <string name="paste">لصق</string>
     <string name="clear">مسح</string>
     <string name="analyze">تحليل</string>
-    <string name="analyzing">جارٍ التحليل…</string>
+    <string name="analyzing">جار التحليل…</string>
     <string name="clipboard_pasted">تم اللصق من الحافظة</string>
     <string name="shared_link_received">تم استلام الرابط من تطبيق آخر</string>
 
@@ -29,32 +29,32 @@
     <string name="approx_size">~%1$s</string>
 
     <!-- Errors -->
-    <string name="error_invalid_url">الرابط غير صالح. تأكد أنه يبدأ بـ http أو https</string>
-    <string name="error_title">تعذّر التحليل</string>
+    <string name="error_invalid_url">الرابط غير صالح. تأكد أنه يبدأ ب http أو https</string>
+    <string name="error_title">تعذر التحليل</string>
     <string name="retry">إعادة المحاولة</string>
-    <string name="update_and_retry">تحديث المحرّك وإعادة المحاولة</string>
+    <string name="update_and_retry">تحديث المحرك وإعادة المحاولة</string>
 
     <!-- Downloads -->
     <string name="downloads_active">التحميلات الجارية</string>
     <string name="state_queued">في الانتظار</string>
-    <string name="state_downloading">جارٍ التحميل</string>
+    <string name="state_downloading">جار التحميل</string>
     <string name="state_processing">معالجة ودمج</string>
-    <string name="state_saving">جارٍ الحفظ</string>
+    <string name="state_saving">جار الحفظ</string>
     <string name="state_completed">اكتمل</string>
     <string name="state_failed">فشل</string>
-    <string name="state_canceled">أُلغي</string>
+    <string name="state_canceled">ألغي</string>
     <string name="cancel">إلغاء</string>
-    <string name="download_started">بدأ التحميل — تابع التقدّم في الإشعارات</string>
+    <string name="download_started">بدأ التحميل — تابع التقدم في الإشعارات</string>
 
     <!-- History -->
     <string name="history_title">سجل التحميلات</string>
     <string name="history_empty_title">لا توجد تحميلات بعد</string>
-    <string name="history_empty_sub">كل ملف تحمّله سيظهر هنا</string>
+    <string name="history_empty_sub">كل ملف تحمله سيظهر هنا</string>
     <string name="open">فتح</string>
     <string name="delete">حذف</string>
     <string name="delete_from_history">حذف من السجل</string>
     <string name="deleted">تم الحذف</string>
-    <string name="cannot_open_file">تعذّر فتح الملف</string>
+    <string name="cannot_open_file">تعذر فتح الملف</string>
     <string name="clear_history">مسح السجل</string>
 
     <!-- Settings -->
@@ -64,23 +64,21 @@
     <string name="theme_system">النظام</string>
     <string name="theme_light">فاتح</string>
     <string name="theme_dark">داكن</string>
-    <string name="dynamic_color">ألوان الجهاز (Material You)</string>
-    <string name="dynamic_color_desc">استخدام ألوان خلفية جهازك</string>
     <string name="language">اللغة</string>
     <string name="language_system">لغة النظام</string>
     <string name="language_ar">العربية</string>
     <string name="language_en">English</string>
 
-    <string name="settings_engine">المحرّك</string>
+    <string name="settings_engine">المحرك</string>
     <string name="engine_version">إصدار yt-dlp</string>
     <string name="engine_version_unknown">غير معروف</string>
-    <string name="update_engine">تحديث المحرّك</string>
-    <string name="updating_engine">جارٍ التحديث…</string>
-    <string name="engine_up_to_date">المحرّك محدّث بالفعل</string>
-    <string name="engine_updated">تم تحديث المحرّك بنجاح</string>
+    <string name="update_engine">تحديث المحرك</string>
+    <string name="updating_engine">جار التحديث…</string>
+    <string name="engine_up_to_date">المحرك محدث بالفعل</string>
+    <string name="engine_updated">تم تحديث المحرك بنجاح</string>
     <string name="engine_update_failed">فشل التحديث: %1$s</string>
     <string name="auto_update">التحديث التلقائي الأسبوعي</string>
-    <string name="auto_update_desc">يبقي التطبيق يعمل عندما تتغيّر المواقع</string>
+    <string name="auto_update_desc">يبقي التطبيق يعمل عندما تتغير المواقع</string>
 
     <string name="settings_advanced">متقدم</string>
     <string name="cookies_title">ملف الكوكيز</string>
@@ -95,13 +93,13 @@
     <string name="save_location_value">Download/VideoDownloader</string>
 
     <string name="settings_about">عن التطبيق</string>
-    <string name="about_desc">تطبيق شخصي لتحميل الوسائط، مبني على yt-dlp وffmpeg. كل شيء يجري على جهازك: لا خوادم، لا حسابات، لا تتبّع.</string>
+    <string name="about_desc">تطبيق شخصي لتحميل الوسائط، مبني على yt-dlp وffmpeg. كل شيء يجري على جهازك: لا خوادم، لا حسابات، لا تتبع.</string>
     <string name="version_label">الإصدار %1$s</string>
 
     <!-- Engine init -->
-    <string name="initializing_engine">تهيئة المحرّك</string>
-    <string name="initializing_engine_sub">تحدث مرة واحدة فقط وتستغرق بضع ثوانٍ</string>
-    <string name="engine_init_failed">فشلت تهيئة المحرّك</string>
+    <string name="initializing_engine">تهيئة المحرك</string>
+    <string name="initializing_engine_sub">تحدث مرة واحدة فقط وتستغرق بضع ثوان</string>
+    <string name="engine_init_failed">فشلت تهيئة المحرك</string>
 
     <!-- Notifications -->
     <string name="channel_downloads">التحميلات</string>
@@ -109,16 +107,27 @@
     <string name="notif_preparing">التحضير…</string>
     <string name="notif_complete_action">اكتمل — اضغط للفتح</string>
     <string name="notif_failed_title">فشل التحميل</string>
-    <string name="notification_permission_rationale">فعّل الإشعارات لمتابعة تقدّم التحميل</string>
+    <string name="notification_permission_rationale">فعل الإشعارات لمتابعة تقدم التحميل</string>
 
     <!-- Sources -->
     <string name="source_direct">رابط مباشر</string>
     <string name="source_other">مصدر آخر</string>
     <string name="source_unknown">غير معروف</string>
-    <string name="engine_update_failed_short">فشل تحديث المحرّك</string>
-    <string name="idle_title">ابدأ بلصق رابط</string>
-    <string name="idle_subtitle">أو شارك الرابط مباشرة من أي تطبيق — وسيبدأ التحليل وحده</string>
+    <string name="engine_update_failed_short">فشل تحديث المحرك</string>
     <string name="share">مشاركة</string>
     <string name="share_via">مشاركة الملف عبر</string>
-    <string name="cannot_share">تعذّرت مشاركة الملف</string>
+    <string name="cannot_share">تعذرت مشاركة الملف</string>
+    <string name="idle_hint">ابدأ بلصق الرابط</string>
+    <string name="font">نوع الخط</string>
+    <string name="playlist">قائمة تشغيل</string>
+    <string name="playlist_count">%1$d مقطع</string>
+    <string name="select_all">تحديد الكل</string>
+    <string name="clear_selection">إلغاء التحديد</string>
+    <string name="download_selected">تحميل المحدد (%1$d)</string>
+    <string name="download_selected_mp3">MP3 للمحدد</string>
+    <string name="single_video_only">تحميل هذا الفيديو فقط</string>
+    <string name="quality_cap">الجودة القصوى</string>
+    <string name="quality_best">الأفضل</string>
+    <string name="playlist_queued">أضيفت %1$d مقاطع إلى الطابور</string>
+    <string name="nothing_selected">لم تحدد أي مقطع</string>
 </resources>

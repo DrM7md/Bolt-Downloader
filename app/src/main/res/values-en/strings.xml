@@ -57,8 +57,6 @@
     <string name="theme_system">System</string>
     <string name="theme_light">Light</string>
     <string name="theme_dark">Dark</string>
-    <string name="dynamic_color">Device colors (Material You)</string>
-    <string name="dynamic_color_desc">Use your wallpaper colors</string>
     <string name="language">Language</string>
     <string name="language_system">System language</string>
     <string name="language_ar">العربية</string>
@@ -106,9 +104,20 @@
     <string name="source_other">Other source</string>
     <string name="source_unknown">Unknown</string>
     <string name="engine_update_failed_short">Engine update failed</string>
-    <string name="idle_title">Start by pasting a link</string>
-    <string name="idle_subtitle">Or share one straight from any app — analysis starts on its own</string>
     <string name="share">Share</string>
     <string name="share_via">Share file via</string>
     <string name="cannot_share">Could not share the file</string>
+    <string name="idle_hint">Start by pasting a link</string>
+    <string name="font">Font</string>
+    <string name="playlist">Playlist</string>
+    <string name="playlist_count">%1$d videos</string>
+    <string name="select_all">Select all</string>
+    <string name="clear_selection">Clear selection</string>
+    <string name="download_selected">Download selected (%1$d)</string>
+    <string name="download_selected_mp3">MP3 for selected</string>
+    <string name="single_video_only">Download this video only</string>
+    <string name="quality_cap">Max quality</string>
+    <string name="quality_best">Best</string>
+    <string name="playlist_queued">%1$d videos added to the queue</string>
+    <string name="nothing_selected">Nothing selected</string>
 </resources>

@@ -13,9 +13,14 @@ data class MediaInfo(
     val isLive: Boolean = false,
 )
 
-/** One selectable row in the quality list, built from the formats yt-dlp really returned. */
+/**
+ * One selectable row in the quality list, built from the formats yt-dlp really returned.
+ *
+ * [rung] counts the SHORT side, which is what "1080p" means to a viewer and what yt-dlp's `res`
+ * sorter uses. Going by height alone labels a 720x1280 TikTok clip 1080p, which is simply wrong.
+ */
 data class FormatOption(
-    val height: Int,
+    val rung: Int,
     val label: String,
     val ext: String,
     val approxBytes: Long?,
@@ -51,4 +56,23 @@ data class DownloadTask(
     val speed: String? = null,
     val error: String? = null,
     val savedUri: String? = null,
+)
+
+/** One row of a playlist index, as returned by `--flat-playlist` (no per-video request yet). */
+data class PlaylistEntry(
+    val id: String,
+    val title: String,
+    val url: String,
+    val durationSec: Int,
+    val thumbnail: String?,
+)
+
+data class PlaylistInfo(
+    val title: String,
+    val uploader: String?,
+    val entries: List<PlaylistEntry>,
+    val source: Source,
+    val originalUrl: String,
+    /** Set when the link pointed at one video inside a playlist, so we can offer just that one. */
+    val singleVideoUrl: String?,
 )

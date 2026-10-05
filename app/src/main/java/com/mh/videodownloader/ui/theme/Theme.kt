@@ -1,22 +1,20 @@
 package com.mh.videodownloader.ui.theme
 
 import android.app.Activity
-import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Shapes
-import androidx.compose.material3.dynamicDarkColorScheme
-import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.unit.dp
 import androidx.core.view.WindowCompat
+import com.mh.videodownloader.data.prefs.AppFont
 import com.mh.videodownloader.data.prefs.ThemeMode
 
 val AppShapes = Shapes(
@@ -33,7 +31,7 @@ val LocalIsDarkTheme = staticCompositionLocalOf { false }
 @Composable
 fun VideoDownloaderTheme(
     themeMode: ThemeMode = ThemeMode.SYSTEM,
-    dynamicColor: Boolean = false,
+    font: AppFont = AppFont.CAIRO,
     content: @Composable () -> Unit,
 ) {
     val dark = when (themeMode) {
@@ -42,14 +40,7 @@ fun VideoDownloaderTheme(
         ThemeMode.DARK -> true
     }
 
-    val context = LocalContext.current
-    val colorScheme = when {
-        dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S ->
-            if (dark) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
-
-        dark -> DarkColors
-        else -> LightColors
-    }
+    val colorScheme = if (dark) DarkColors else LightColors
 
     val view = LocalView.current
     if (!view.isInEditMode) {
@@ -65,7 +56,7 @@ fun VideoDownloaderTheme(
     androidx.compose.runtime.CompositionLocalProvider(LocalIsDarkTheme provides dark) {
         MaterialTheme(
             colorScheme = colorScheme,
-            typography = AppTypography,
+            typography = remember(font) { appTypography(font) },
             shapes = AppShapes,
             content = content,
         )

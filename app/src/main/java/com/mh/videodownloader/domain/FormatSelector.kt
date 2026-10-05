@@ -27,8 +27,7 @@ object FormatSelector {
         val duration = info.duration
         val formats = info.formats.orEmpty()
 
-        val audioOnly = formats.filter { it.isAudioOnly }
-        val bestAudioBytes = audioOnly
+        val bestAudioBytes = formats.filter { it.isAudioOnly }
             .maxByOrNull { it.tbr }
             ?.let { estimateBytes(it, duration) }
 
@@ -36,7 +35,7 @@ object FormatSelector {
         if (videoFormats.isEmpty()) return emptyList()
 
         return videoFormats
-            .groupBy { rungFor(it.height) }
+            .groupBy { rungFor(it.shortSide) }
             .mapNotNull { (rung, candidates) ->
                 // Prefer mp4/h264 at the same rung: it merges fastest and plays everywhere.
                 val best = candidates.maxByOrNull { scoreOf(it) } ?: return@mapNotNull null
@@ -48,14 +47,14 @@ object FormatSelector {
                     else -> videoBytes
                 }
                 FormatOption(
-                    height = rung,
+                    rung = rung,
                     label = "${rung}p",
                     ext = if (best.ext == "webm" && needsAudio) "mp4" else (best.ext ?: "mp4"),
                     approxBytes = total,
                     fps = best.fps,
                 )
             }
-            .sortedBy { it.height }
+            .sortedBy { it.rung }
     }
 
     fun bestAudioBytes(info: VideoInfo): Long? =
@@ -64,6 +63,10 @@ object FormatSelector {
             ?.let { estimateBytes(it, info.duration) }
 
     private fun rungFor(height: Int): Int = RUNGS.lastOrNull { it <= height } ?: height
+
+    /** The side that decides the "p" number: 1080p means 1080 across the short edge. */
+    private val VideoFormat.shortSide: Int
+        get() = if (width > 0 && height > 0) minOf(width, height) else height
 
     private fun scoreOf(f: VideoFormat): Int {
         var score = f.tbr

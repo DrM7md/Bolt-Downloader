@@ -6,6 +6,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -27,8 +28,8 @@ import androidx.compose.material.icons.rounded.Info
 import androidx.compose.material.icons.rounded.Language
 import androidx.compose.material.icons.rounded.LightMode
 import androidx.compose.material.icons.rounded.Memory
-import androidx.compose.material.icons.rounded.Palette
 import androidx.compose.material.icons.rounded.PhoneAndroid
+import androidx.compose.material.icons.rounded.TextFields
 import androidx.compose.material.icons.rounded.Update
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FilterChip
@@ -50,10 +51,12 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.mh.videodownloader.BuildConfig
 import com.mh.videodownloader.R
+import com.mh.videodownloader.data.prefs.AppFont
 import com.mh.videodownloader.data.prefs.AppLanguage
 import com.mh.videodownloader.data.prefs.ThemeMode
 import com.mh.videodownloader.ui.common.AppCard
 import com.mh.videodownloader.ui.common.SectionTitle
+import com.mh.videodownloader.ui.theme.fontFamilyOf
 import com.mh.videodownloader.util.ltr
 
 @Composable
@@ -117,18 +120,7 @@ fun SettingsScreen(
                     )
                 }
 
-                if (settings.supportsDynamicColor) {
-                    Spacer(Modifier.height(6.dp))
-                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
-                    SwitchRow(
-                        icon = Icons.Rounded.Palette,
-                        title = stringResource(R.string.dynamic_color),
-                        subtitle = stringResource(R.string.dynamic_color_desc),
-                        checked = settings.dynamicColor,
-                        onCheckedChange = viewModel::setDynamicColor,
-                    )
-                }
-
+                Spacer(Modifier.height(6.dp))
                 HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
                 Spacer(Modifier.height(12.dp))
                 Row(verticalAlignment = Alignment.CenterVertically) {
@@ -159,6 +151,43 @@ fun SettingsScreen(
                         selected = settings.language == AppLanguage.ENGLISH,
                         onClick = { viewModel.setLanguage(AppLanguage.ENGLISH) },
                     )
+                }
+
+                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
+                Spacer(Modifier.height(12.dp))
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    IconBubble(Icons.Rounded.TextFields)
+                    Spacer(Modifier.width(12.dp))
+                    Text(
+                        text = stringResource(R.string.font),
+                        style = MaterialTheme.typography.titleSmall,
+                    )
+                }
+                Spacer(Modifier.height(10.dp))
+                // Each chip is set in the face it selects, so the choice is visible rather than
+                // a list of names you have to try one by one.
+                FlowRow(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    AppFont.entries.forEach { font ->
+                        FilterChip(
+                            selected = settings.font == font,
+                            onClick = { viewModel.setFont(font) },
+                            label = {
+                                Text(
+                                    text = font.sample,
+                                    fontFamily = fontFamilyOf(font),
+                                    style = MaterialTheme.typography.labelLarge,
+                                )
+                            },
+                            shape = CircleShape,
+                            colors = FilterChipDefaults.filterChipColors(
+                                selectedContainerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.16f),
+                                selectedLabelColor = MaterialTheme.colorScheme.primary,
+                            ),
+                        )
+                    }
                 }
             }
         }

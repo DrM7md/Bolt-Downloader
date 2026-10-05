@@ -11,6 +11,7 @@ import com.mh.videodownloader.domain.DownloadSelection
 import com.mh.videodownloader.domain.DownloadTask
 import com.mh.videodownloader.domain.FormatOption
 import com.mh.videodownloader.domain.MediaInfo
+import com.mh.videodownloader.domain.PlaylistInfo
 import com.mh.videodownloader.domain.SourceDetector
 import com.mh.videodownloader.service.DownloadService
 import kotlinx.coroutines.Job
@@ -29,8 +30,19 @@ sealed interface HomeUiState {
         val audioBytes: Long?,
     ) : HomeUiState
 
+    data class Playlist(
+        val info: PlaylistInfo,
+        val selected: Set<String>,
+        val qualityCap: Int,
+    ) : HomeUiState
+
     data class Error(val message: String, val canRetryAfterUpdate: Boolean) : HomeUiState
 }
+
+/** Quality caps offered for a playlist, where we have not analysed each video individually. */
+val PLAYLIST_QUALITY_CAPS = listOf(360, 480, 720, 1080, BEST_QUALITY_CAP)
+
+const val BEST_QUALITY_CAP = 4320
 
 class HomeViewModel(application: Application) : AndroidViewModel(application) {
 
@@ -47,6 +59,10 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
 
     private val _message = MutableStateFlow<Int?>(null)
     val message: StateFlow<Int?> = _message.asStateFlow()
+
+    /** Argument for the "N added to the queue" message. */
+    private val _queuedCount = MutableStateFlow(0)
+    val queuedCount: StateFlow<Int> = _queuedCount.asStateFlow()
 
     private val _isUpdatingEngine = MutableStateFlow(false)
     val isUpdatingEngine: StateFlow<Boolean> = _isUpdatingEngine.asStateFlow()
@@ -97,7 +113,7 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
         onUrlChanged("")
     }
 
-    fun analyze() {
+    fun analyze(forceSingleVideo: Boolean = false) {
         val target = _url.value.trim()
         if (target.isEmpty()) return
         if (!SourceDetector.isValid(target)) {
@@ -111,6 +127,20 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
         analyzeJob?.cancel()
         analyzeJob = viewModelScope.launch {
             _uiState.value = HomeUiState.Analyzing
+
+            if (!forceSingleVideo && SourceDetector.isPlaylist(target)) {
+                container.mediaRepository.analyzePlaylist(target)
+                    .onSuccess { playlist ->
+                        _uiState.value = HomeUiState.Playlist(
+                            info = playlist,
+                            selected = playlist.entries.map { it.id }.toSet(),
+                            qualityCap = 720,
+                        )
+                    }
+                    .onFailure { error -> _uiState.value = error.toErrorState() }
+                return@launch
+            }
+
             container.mediaRepository.analyze(target)
                 .onSuccess { analysis ->
                     _uiState.value = HomeUiState.Ready(
@@ -119,22 +149,10 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
                         audioBytes = analysis.audioBytes,
                     )
                     // Default to the best rung at or below 720p — the one people actually pick.
-                    _selectedHeight.value = analysis.formats.lastOrNull { it.height <= 720 }?.height
-                        ?: analysis.formats.firstOrNull()?.height
+                    _selectedHeight.value = analysis.formats.lastOrNull { it.rung <= 720 }?.rung
+                        ?: analysis.formats.firstOrNull()?.rung
                 }
-                .onFailure { error ->
-                    _uiState.value = when (error) {
-                        is MediaRepository.InvalidUrlException -> HomeUiState.Error(
-                            getApplication<Application>().getString(R.string.error_invalid_url),
-                            canRetryAfterUpdate = false,
-                        )
-
-                        else -> HomeUiState.Error(
-                            error.readableMessage(),
-                            canRetryAfterUpdate = true,
-                        )
-                    }
-                }
+                .onFailure { error -> _uiState.value = error.toErrorState() }
         }
     }
 
@@ -166,9 +184,10 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
 
     fun downloadVideo() {
         val ready = _uiState.value as? HomeUiState.Ready ?: return
-        val height = _selectedHeight.value ?: ready.formats.lastOrNull()?.height ?: return
-        val label = ready.formats.firstOrNull { it.height == height }?.label ?: "${height}p"
-        enqueue(ready.info, DownloadSelection.Video(height, label))
+        val chosen = ready.formats.firstOrNull { it.rung == _selectedHeight.value }
+            ?: ready.formats.lastOrNull()
+            ?: return
+        enqueue(ready.info, DownloadSelection.Video(chosen.rung, chosen.label))
     }
 
     fun downloadAudio() {
@@ -203,6 +222,75 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
 
     fun consumeMessage() {
         _message.value = null
+    }
+
+    private fun Throwable.toErrorState(): HomeUiState.Error = when (this) {
+        is MediaRepository.InvalidUrlException -> HomeUiState.Error(
+            getApplication<Application>().getString(R.string.error_invalid_url),
+            canRetryAfterUpdate = false,
+        )
+
+        else -> HomeUiState.Error(readableMessage(), canRetryAfterUpdate = true)
+    }
+
+    // ---- playlists ------------------------------------------------------------------------------
+
+    fun togglePlaylistEntry(id: String) {
+        val state = _uiState.value as? HomeUiState.Playlist ?: return
+        val selected = if (id in state.selected) state.selected - id else state.selected + id
+        _uiState.value = state.copy(selected = selected)
+    }
+
+    fun setAllPlaylistEntriesSelected(selected: Boolean) {
+        val state = _uiState.value as? HomeUiState.Playlist ?: return
+        _uiState.value = state.copy(
+            selected = if (selected) state.info.entries.map { it.id }.toSet() else emptySet(),
+        )
+    }
+
+    fun setPlaylistQuality(cap: Int) {
+        val state = _uiState.value as? HomeUiState.Playlist ?: return
+        _uiState.value = state.copy(qualityCap = cap)
+    }
+
+    /** The link pointed at one video inside a playlist and the user wants only that one. */
+    fun analyzeSingleVideoOfPlaylist() {
+        val state = _uiState.value as? HomeUiState.Playlist ?: return
+        val single = state.info.singleVideoUrl ?: return
+        _url.value = single
+        analyze(forceSingleVideo = true)
+    }
+
+    fun downloadPlaylist(asAudio: Boolean) {
+        val state = _uiState.value as? HomeUiState.Playlist ?: return
+        val chosen = state.info.entries.filter { it.id in state.selected }
+        if (chosen.isEmpty()) {
+            _message.value = R.string.nothing_selected
+            return
+        }
+        val context = getApplication<Application>()
+        val sourceLabel = state.info.source.brandName
+            ?: context.getString(state.info.source.labelRes ?: R.string.source_other)
+        val selection = if (asAudio) {
+            DownloadSelection.AudioMp3
+        } else {
+            DownloadSelection.Video(state.qualityCap, "${state.qualityCap}p")
+        }
+        val tasks = chosen.map { entry ->
+            DownloadTask(
+                id = UUID.randomUUID().toString(),
+                url = entry.url,
+                title = entry.title,
+                thumbnail = entry.thumbnail,
+                sourceLabel = sourceLabel,
+                selection = selection,
+                durationSec = entry.durationSec,
+                uploader = state.info.uploader,
+            )
+        }
+        DownloadService.enqueueAll(context, tasks)
+        _queuedCount.value = tasks.size
+        _message.value = R.string.playlist_queued
     }
 
     private fun Throwable.readableMessage(): String {

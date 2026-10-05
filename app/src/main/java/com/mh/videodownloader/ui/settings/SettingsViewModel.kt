@@ -9,6 +9,7 @@ import androidx.lifecycle.viewModelScope
 import com.mh.videodownloader.App
 import com.mh.videodownloader.R
 import com.mh.videodownloader.data.engine.YtDlpEngine
+import com.mh.videodownloader.data.prefs.AppFont
 import com.mh.videodownloader.data.prefs.AppLanguage
 import com.mh.videodownloader.data.prefs.AppSettings
 import com.mh.videodownloader.data.prefs.ThemeMode
@@ -52,10 +53,6 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
         viewModelScope.launch { container.settings.setThemeMode(mode) }
     }
 
-    fun setDynamicColor(enabled: Boolean) {
-        viewModelScope.launch { container.settings.setDynamicColor(enabled) }
-    }
-
     fun setLanguage(language: AppLanguage) {
         viewModelScope.launch {
             container.settings.setLanguage(language)
@@ -66,6 +63,10 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
                 else LocaleListCompat.forLanguageTags(language.tag)
             )
         }
+    }
+
+    fun setFont(font: AppFont) {
+        viewModelScope.launch { container.settings.setFont(font) }
     }
 
     fun setAutoUpdate(enabled: Boolean) {

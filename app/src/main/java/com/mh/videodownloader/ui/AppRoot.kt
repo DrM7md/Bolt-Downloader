@@ -61,9 +61,10 @@ fun AppRoot(
     val currentDestination = backStackEntry?.destination
 
     val homeMessage by homeViewModel.message.collectAsStateWithLifecycle()
+    val queuedCount by homeViewModel.queuedCount.collectAsStateWithLifecycle()
     val settingsMessage by settingsViewModel.message.collectAsStateWithLifecycle()
 
-    val homeText = homeMessage?.let { stringResource(it) }
+    val homeText = homeMessage?.let { stringResource(it, queuedCount) }
     LaunchedEffect(homeMessage) {
         homeText?.let {
             snackbarHostState.showSnackbar(it)

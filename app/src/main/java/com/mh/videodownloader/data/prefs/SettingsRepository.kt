@@ -1,7 +1,6 @@
 package com.mh.videodownloader.data.prefs
 
 import android.content.Context
-import android.os.Build
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
@@ -16,16 +15,24 @@ enum class ThemeMode { SYSTEM, LIGHT, DARK }
 
 enum class AppLanguage(val tag: String) { SYSTEM(""), ARABIC("ar"), ENGLISH("en") }
 
+/** Bundled UI faces. Each one covers Arabic and Latin so the app never mixes two voices. */
+enum class AppFont(val key: String, val sample: String) {
+    CAIRO("cairo", "كايرو"),
+    TAJAWAL("tajawal", "تجوال"),
+    READEX("readex", "ريدكس"),
+    NOTO_KUFI("noto_kufi", "نوتو كوفي"),
+    ALMARAI("almarai", "المراعي"),
+    SYSTEM("system", "خط النظام"),
+}
+
 data class AppSettings(
     val themeMode: ThemeMode = ThemeMode.SYSTEM,
-    val dynamicColor: Boolean = false,
     val language: AppLanguage = AppLanguage.SYSTEM,
+    val font: AppFont = AppFont.CAIRO,
     val autoUpdateEngine: Boolean = true,
     val lastEngineUpdate: Long = 0L,
     val hasCookies: Boolean = false,
-) {
-    val supportsDynamicColor: Boolean get() = Build.VERSION.SDK_INT >= Build.VERSION_CODES.S
-}
+)
 
 private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "settings")
 
@@ -35,9 +42,9 @@ class SettingsRepository(private val context: Context) {
         AppSettings(
             themeMode = prefs[KEY_THEME]?.let { runCatching { ThemeMode.valueOf(it) }.getOrNull() }
                 ?: ThemeMode.SYSTEM,
-            dynamicColor = prefs[KEY_DYNAMIC] ?: false,
             language = AppLanguage.entries.firstOrNull { it.tag == prefs[KEY_LANGUAGE] }
                 ?: AppLanguage.SYSTEM,
+            font = AppFont.entries.firstOrNull { it.key == prefs[KEY_FONT] } ?: AppFont.CAIRO,
             autoUpdateEngine = prefs[KEY_AUTO_UPDATE] ?: true,
             lastEngineUpdate = prefs[KEY_LAST_UPDATE] ?: 0L,
             hasCookies = prefs[KEY_HAS_COOKIES] ?: false,
@@ -46,9 +53,9 @@ class SettingsRepository(private val context: Context) {
 
     suspend fun setThemeMode(mode: ThemeMode) = edit { it[KEY_THEME] = mode.name }
 
-    suspend fun setDynamicColor(enabled: Boolean) = edit { it[KEY_DYNAMIC] = enabled }
-
     suspend fun setLanguage(language: AppLanguage) = edit { it[KEY_LANGUAGE] = language.tag }
+
+    suspend fun setFont(font: AppFont) = edit { it[KEY_FONT] = font.key }
 
     suspend fun setAutoUpdate(enabled: Boolean) = edit { it[KEY_AUTO_UPDATE] = enabled }
 
@@ -62,8 +69,8 @@ class SettingsRepository(private val context: Context) {
 
     private companion object {
         val KEY_THEME = stringPreferencesKey("theme_mode")
-        val KEY_DYNAMIC = booleanPreferencesKey("dynamic_color")
         val KEY_LANGUAGE = stringPreferencesKey("language")
+        val KEY_FONT = stringPreferencesKey("font")
         val KEY_AUTO_UPDATE = booleanPreferencesKey("auto_update")
         val KEY_LAST_UPDATE = longPreferencesKey("last_engine_update")
         val KEY_HAS_COOKIES = booleanPreferencesKey("has_cookies")

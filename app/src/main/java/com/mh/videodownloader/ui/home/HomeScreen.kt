@@ -22,6 +22,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
@@ -77,7 +78,6 @@ import com.mh.videodownloader.domain.FormatOption
 import com.mh.videodownloader.domain.MediaInfo
 import com.mh.videodownloader.ui.common.AppCard
 import com.mh.videodownloader.ui.common.Chip
-import com.mh.videodownloader.ui.common.EmptyState
 import com.mh.videodownloader.ui.common.GradientButton
 import com.mh.videodownloader.ui.common.SectionTitle
 import com.mh.videodownloader.ui.common.SelectableRow
@@ -161,7 +161,7 @@ fun HomeScreen(
                         message = current.message,
                         canUpdate = current.canRetryAfterUpdate,
                         updating = isUpdating,
-                        onRetry = viewModel::analyze,
+                        onRetry = { viewModel.analyze() },
                         onUpdateAndRetry = viewModel::updateEngineAndRetry,
                     )
 
@@ -172,8 +172,31 @@ fun HomeScreen(
                         onDownloadVideo = viewModel::downloadVideo,
                         onDownloadAudio = viewModel::downloadAudio,
                     )
+
+                    is HomeUiState.Playlist -> PlaylistHeader(
+                        state = current,
+                        onQuality = viewModel::setPlaylistQuality,
+                        onSelectAll = { viewModel.setAllPlaylistEntriesSelected(it) },
+                        onDownloadVideo = { viewModel.downloadPlaylist(asAudio = false) },
+                        onDownloadAudio = { viewModel.downloadPlaylist(asAudio = true) },
+                        onSingleVideo = viewModel::analyzeSingleVideoOfPlaylist,
+                    )
                 }
             }
+        }
+
+        // Entries live as their own lazy items: a playlist can run to hundreds of videos and a
+        // Column inside one item would compose every row at once.
+        (state as? HomeUiState.Playlist)?.let { playlist ->
+            items(playlist.info.entries, key = { it.id }) { entry ->
+                PlaylistRow(
+                    entry = entry,
+                    checked = entry.id in playlist.selected,
+                    onToggle = { viewModel.togglePlaylistEntry(entry.id) },
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
+                )
+            }
+            item { Spacer(Modifier.height(12.dp)) }
         }
 
         if (downloads.isNotEmpty()) {
@@ -381,12 +404,31 @@ private fun EngineBanner(failed: Boolean, modifier: Modifier = Modifier) {
 
 @Composable
 private fun IdleHint(modifier: Modifier = Modifier) {
-    EmptyState(
-        icon = Icons.Rounded.Bolt,
-        title = stringOf(R.string.idle_title),
-        subtitle = stringOf(R.string.idle_subtitle),
-        modifier = modifier,
-    )
+    Column(
+        modifier = modifier.fillMaxWidth().padding(vertical = 28.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        Text(
+            text = stringOf(R.string.idle_hint),
+            style = MaterialTheme.typography.titleMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        Spacer(Modifier.height(18.dp))
+        Box(
+            modifier = Modifier
+                .size(84.dp)
+                .clip(CircleShape)
+                .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.10f)),
+            contentAlignment = Alignment.Center,
+        ) {
+            Icon(
+                Icons.Rounded.Bolt,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.size(38.dp),
+            )
+        }
+    }
 }
 
 @Composable
@@ -486,8 +528,8 @@ private fun ReadyContent(
                     state.formats.reversed().forEach { format ->
                         QualityRow(
                             format = format,
-                            selected = format.height == selectedHeight,
-                            onClick = { onSelect(format.height) },
+                            selected = format.rung == selectedHeight,
+                            onClick = { onSelect(format.rung) },
                         )
                     }
                 }

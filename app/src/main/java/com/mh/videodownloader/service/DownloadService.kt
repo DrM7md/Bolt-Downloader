@@ -218,6 +218,17 @@ class DownloadService : Service() {
             )
         }
 
+        /** Queues a whole playlist with a single service start instead of one per entry. */
+        fun enqueueAll(context: Context, tasks: List<DownloadTask>) {
+            if (tasks.isEmpty()) return
+            val app = context.applicationContext as App
+            tasks.forEach { app.container.downloadQueue.enqueue(it) }
+            ContextCompat.startForegroundService(
+                context.applicationContext,
+                Intent(context.applicationContext, DownloadService::class.java),
+            )
+        }
+
         fun cancel(context: Context, taskId: String) {
             val intent = Intent(context.applicationContext, DownloadService::class.java).apply {
                 action = ACTION_CANCEL

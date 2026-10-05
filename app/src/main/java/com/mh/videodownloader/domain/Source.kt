@@ -51,6 +51,21 @@ object SourceDetector {
 
     fun isValid(url: String): Boolean = detect(url).isSupported
 
+    /** True for a link that indexes several videos rather than one. */
+    fun isPlaylist(url: String): Boolean {
+        val uri = runCatching { Uri.parse(url.trim()) }.getOrNull() ?: return false
+        if (!uri.getQueryParameter("list").isNullOrBlank()) return true
+        val path = uri.path?.lowercase().orEmpty()
+        return path.contains("/playlist") || path.contains("/sets/")
+    }
+
+    /** The single-video link hiding inside a "watch?v=...&list=..." URL, if there is one. */
+    fun singleVideoUrlIn(url: String): String? {
+        val uri = runCatching { Uri.parse(url.trim()) }.getOrNull() ?: return null
+        val id = uri.getQueryParameter("v") ?: return null
+        return if (id.isBlank()) null else "https://www.youtube.com/watch?v=$id"
+    }
+
     /** Pulls the first http(s) link out of arbitrary shared text ("Look at this: https://..."). */
     fun firstUrlIn(text: String?): String? {
         if (text.isNullOrBlank()) return null

@@ -124,6 +124,25 @@ class YtDlpEngine(private val appContext: Context) {
     }
 
     /**
+     * Reads a playlist without touching any of its videos: `--flat-playlist` asks the site for the
+     * index only, which is one request instead of one per entry.
+     */
+    suspend fun analyzePlaylist(url: String, cookiesFile: File?): String = withContext(Dispatchers.IO) {
+        val request = YoutubeDLRequest(url).apply {
+            addOption("--flat-playlist")
+            addOption("--dump-single-json")
+            addOption("--no-warnings")
+            addOption("--socket-timeout", "20")
+            addOption("--retries", "3")
+            applyCommonOptions(cookiesFile)
+        }
+        val response = runPermits.withPermit {
+            repairingIfBroken { YoutubeDL.getInstance().execute(request, null, null) }
+        }
+        response.out.ifBlank { throw IllegalStateException("playlist returned no JSON") }
+    }
+
+    /**
      * Runs the actual download into [outputDir] (an app-private folder) and returns the file
      * produced. Progress arrives on the caller's thread through [onProgress].
      */
@@ -150,12 +169,12 @@ class YtDlpEngine(private val appContext: Context) {
                 is DownloadSelection.Video -> {
                     // Above 720p YouTube serves video and audio as separate tracks, so the
                     // "+bestaudio" half and ffmpeg merging are what keep the result from being silent.
-                    addOption(
-                        "-f",
-                        "bestvideo[height<=${selection.height}][ext=mp4]+bestaudio[ext=m4a]" +
-                            "/bestvideo[height<=${selection.height}]+bestaudio" +
-                            "/best[height<=${selection.height}]/best"
-                    )
+                    addOption("-f", "bv*+ba/b")
+                    // Resolution first, codec second. Filtering by [height<=N][ext=mp4] instead —
+                    // as this used to — silently handed back 720p whenever a site published 1080p
+                    // as VP9/AV1 only, and mislabelled portrait clips, because yt-dlp's `res`
+                    // sorts on the SHORT side while `height` is the long one on a phone video.
+                    addOption("-S", "res:${selection.height},vcodec:h264,ext:mp4:m4a")
                     addOption("--merge-output-format", "mp4")
                 }
 
