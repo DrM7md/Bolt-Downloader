@@ -13,8 +13,8 @@ android {
         applicationId = "com.mh.videodownloader"
         minSdk = 26
         targetSdk = 36
-        versionCode = 1
-        versionName = "1.0"
+        versionCode = 2
+        versionName = "2.0"
 
         // arm64 for real devices, x86_64 so the app also runs on the emulator.
         ndk { abiFilters += listOf("arm64-v8a", "x86_64") }
@@ -117,6 +117,7 @@ dependencies {
 
     implementation(libs.coil.compose)
     implementation(libs.coil.network.okhttp)
+    implementation(libs.coil.video)
 
     implementation(libs.media3.exoplayer)
     implementation(libs.media3.ui)

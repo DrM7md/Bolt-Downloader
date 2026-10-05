@@ -104,11 +104,3 @@ val DarkColors: ColorScheme = darkColorScheme(
     scrim = Color(0xFF000000),
 )
 
-/** Accent colors per source, used for the little badge on the result card. */
-val SourceColors: Map<String, Color> = mapOf(
-    "YouTube" to Color(0xFFFF0033),
-    "Instagram" to Color(0xFFE1306C),
-    "TikTok" to Color(0xFF00F2EA),
-    "X / Twitter" to Color(0xFF1D9BF0),
-    "Facebook" to Color(0xFF1877F2),
-)

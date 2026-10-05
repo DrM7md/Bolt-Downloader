@@ -15,6 +15,9 @@ enum class ThemeMode { SYSTEM, LIGHT, DARK }
 
 enum class AppLanguage(val tag: String) { SYSTEM(""), ARABIC("ar"), ENGLISH("en") }
 
+/** Where the Library screen reads from. */
+enum class LibrarySource { APP_DOWNLOADS, DEVICE_FOLDER }
+
 /** Bundled UI faces. Each one covers Arabic and Latin so the app never mixes two voices. */
 enum class AppFont(val key: String, val sample: String) {
     CAIRO("cairo", "كايرو"),
@@ -32,6 +35,9 @@ data class AppSettings(
     val autoUpdateEngine: Boolean = true,
     /** Keep audio playing when the app leaves the screen. Off by default. */
     val backgroundPlayback: Boolean = false,
+    val librarySource: LibrarySource = LibrarySource.APP_DOWNLOADS,
+    /** SAF tree URI of the folder picked for [LibrarySource.DEVICE_FOLDER]. */
+    val libraryFolder: String? = null,
     val lastEngineUpdate: Long = 0L,
     val hasCookies: Boolean = false,
 )
@@ -49,6 +55,10 @@ class SettingsRepository(private val context: Context) {
             font = AppFont.entries.firstOrNull { it.key == prefs[KEY_FONT] } ?: AppFont.CAIRO,
             autoUpdateEngine = prefs[KEY_AUTO_UPDATE] ?: true,
             backgroundPlayback = prefs[KEY_BACKGROUND_PLAYBACK] ?: false,
+            librarySource = prefs[KEY_LIBRARY_SOURCE]
+                ?.let { runCatching { LibrarySource.valueOf(it) }.getOrNull() }
+                ?: LibrarySource.APP_DOWNLOADS,
+            libraryFolder = prefs[KEY_LIBRARY_FOLDER],
             lastEngineUpdate = prefs[KEY_LAST_UPDATE] ?: 0L,
             hasCookies = prefs[KEY_HAS_COOKIES] ?: false,
         )
@@ -61,6 +71,14 @@ class SettingsRepository(private val context: Context) {
     suspend fun setFont(font: AppFont) = edit { it[KEY_FONT] = font.key }
 
     suspend fun setAutoUpdate(enabled: Boolean) = edit { it[KEY_AUTO_UPDATE] = enabled }
+
+    suspend fun setLibrarySource(source: LibrarySource) =
+        edit { it[KEY_LIBRARY_SOURCE] = source.name }
+
+    suspend fun setLibraryFolder(treeUri: String) = edit {
+        it[KEY_LIBRARY_FOLDER] = treeUri
+        it[KEY_LIBRARY_SOURCE] = LibrarySource.DEVICE_FOLDER.name
+    }
 
     suspend fun setBackgroundPlayback(enabled: Boolean) =
         edit { it[KEY_BACKGROUND_PLAYBACK] = enabled }
@@ -79,6 +97,8 @@ class SettingsRepository(private val context: Context) {
         val KEY_FONT = stringPreferencesKey("font")
         val KEY_AUTO_UPDATE = booleanPreferencesKey("auto_update")
         val KEY_BACKGROUND_PLAYBACK = booleanPreferencesKey("background_playback")
+        val KEY_LIBRARY_SOURCE = stringPreferencesKey("library_source")
+        val KEY_LIBRARY_FOLDER = stringPreferencesKey("library_folder")
         val KEY_LAST_UPDATE = longPreferencesKey("last_engine_update")
         val KEY_HAS_COOKIES = booleanPreferencesKey("has_cookies")
     }

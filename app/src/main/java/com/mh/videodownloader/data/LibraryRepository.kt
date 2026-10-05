@@ -40,7 +40,9 @@ class LibraryRepository(
         folders.delete(id)
     }
 
-    suspend fun move(entryId: Long, folderId: Long?) = history.moveToFolder(entryId, folderId)
+    suspend fun move(entryIds: Collection<Long>, folderId: Long?) = database.withTransaction {
+        entryIds.forEach { history.moveToFolder(it, folderId) }
+    }
 
     /** The folder a playlist's downloads should land in, created the first time it is needed. */
     suspend fun playlistFolderId(playlistTitle: String): Long =
@@ -51,40 +53,72 @@ class LibraryRepository(
         data object Done : DeleteOutcome
 
         /**
-         * Android will not let the app delete a file it no longer owns (after a reinstall, say)
-         * without asking the user. The UI launches [request]; [finish] then drops the row.
+         * Android will not let the app delete files it no longer owns (after a reinstall, say)
+         * without asking the user. The UI launches [request] — one prompt for all of [entries] —
+         * and [finishDelete] then drops their rows.
          */
-        data class NeedsConsent(val request: IntentSender) : DeleteOutcome
+        data class NeedsConsent(
+            val request: IntentSender,
+            val entries: List<HistoryEntry>,
+        ) : DeleteOutcome
     }
 
-    suspend fun delete(entry: HistoryEntry, deleteFile: Boolean): DeleteOutcome {
-        if (deleteFile) {
-            val consent = withContext(Dispatchers.IO) { deleteFileOrAskConsent(entry) }
-            if (consent != null) return DeleteOutcome.NeedsConsent(consent)
+    suspend fun delete(entries: List<HistoryEntry>, deleteFile: Boolean): DeleteOutcome {
+        if (!deleteFile) {
+            database.withTransaction { entries.forEach { history.deleteById(it.id) } }
+            return DeleteOutcome.Done
         }
-        history.deleteById(entry.id)
-        return DeleteOutcome.Done
+        val blocked = mutableListOf<HistoryEntry>()
+        var recoverable: IntentSender? = null
+        withContext(Dispatchers.IO) {
+            for (entry in entries) {
+                when (val result = tryDeleteFile(entry)) {
+                    FileDelete.Deleted -> history.deleteById(entry.id)
+                    FileDelete.NeedsConsent -> blocked += entry
+                    is FileDelete.NeedsRecoverableConsent -> {
+                        blocked += entry
+                        recoverable = recoverable ?: result.request
+                    }
+                }
+            }
+        }
+        if (blocked.isEmpty()) return DeleteOutcome.Done
+        val request = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            MediaStore.createDeleteRequest(
+                context.contentResolver,
+                blocked.map { it.fileUri.toUri() },
+            ).intentSender
+        } else {
+            // Android 10 can only ask about one file at a time.
+            recoverable ?: return DeleteOutcome.Done
+        }
+        return DeleteOutcome.NeedsConsent(request, blocked)
     }
 
     /** Called once the user approved the system delete prompt. */
-    suspend fun finishDelete(entry: HistoryEntry) = history.deleteById(entry.id)
+    suspend fun finishDelete(entries: List<HistoryEntry>) =
+        database.withTransaction { entries.forEach { history.deleteById(it.id) } }
 
-    private fun deleteFileOrAskConsent(entry: HistoryEntry): IntentSender? {
+    private sealed interface FileDelete {
+        data object Deleted : FileDelete
+        data object NeedsConsent : FileDelete
+        data class NeedsRecoverableConsent(val request: IntentSender) : FileDelete
+    }
+
+    private fun tryDeleteFile(entry: HistoryEntry): FileDelete {
         val uri = entry.fileUri.toUri()
         if (uri.scheme == "file") {
             uri.toFile().delete()
-            return null
+            return FileDelete.Deleted
         }
         return try {
             context.contentResolver.delete(uri, null, null)
-            null
+            FileDelete.Deleted
         } catch (e: SecurityException) {
             when {
-                Build.VERSION.SDK_INT >= Build.VERSION_CODES.R ->
-                    MediaStore.createDeleteRequest(context.contentResolver, listOf(uri)).intentSender
-
+                Build.VERSION.SDK_INT >= Build.VERSION_CODES.R -> FileDelete.NeedsConsent
                 Build.VERSION.SDK_INT == Build.VERSION_CODES.Q && e is RecoverableSecurityException ->
-                    e.userAction.actionIntent.intentSender
+                    FileDelete.NeedsRecoverableConsent(e.userAction.actionIntent.intentSender)
 
                 else -> throw e
             }

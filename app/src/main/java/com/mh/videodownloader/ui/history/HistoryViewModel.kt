@@ -11,8 +11,9 @@ import kotlinx.coroutines.launch
 
 class HistoryViewModel(application: Application) : EntryActionsViewModel(application) {
 
-    val entries: StateFlow<List<HistoryEntry>> = container.historyDao.observeAll()
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
+    /** Null until the first read from the database, so "empty" is never shown by mistake. */
+    val entries: StateFlow<List<HistoryEntry>?> = container.historyDao.observeAll()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
 
     fun clearAll() {
         viewModelScope.launch { container.historyDao.clear() }

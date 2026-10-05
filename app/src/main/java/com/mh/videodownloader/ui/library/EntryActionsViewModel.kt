@@ -15,8 +15,8 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
-/** A pending system "allow this app to delete…" prompt for one entry. */
-data class DeleteConsent(val entry: HistoryEntry, val request: IntentSender)
+/** A pending system "allow this app to delete…" prompt covering one or more entries. */
+data class DeleteConsent(val entries: List<HistoryEntry>, val request: IntentSender)
 
 /**
  * What every list of downloads can do to an entry — delete (optionally with its file) and file
@@ -33,12 +33,13 @@ open class EntryActionsViewModel(application: Application) : AndroidViewModel(ap
     private val _consent = MutableStateFlow<DeleteConsent?>(null)
     val consent: StateFlow<DeleteConsent?> = _consent.asStateFlow()
 
-    fun delete(entry: HistoryEntry, deleteFile: Boolean) {
+    fun delete(entries: List<HistoryEntry>, deleteFile: Boolean) {
+        if (entries.isEmpty()) return
         viewModelScope.launch {
-            when (val outcome = library.delete(entry, deleteFile)) {
+            when (val outcome = library.delete(entries, deleteFile)) {
                 LibraryRepository.DeleteOutcome.Done -> Unit
                 is LibraryRepository.DeleteOutcome.NeedsConsent ->
-                    _consent.value = DeleteConsent(entry, outcome.request)
+                    _consent.value = DeleteConsent(outcome.entries, outcome.request)
             }
         }
     }
@@ -46,19 +47,20 @@ open class EntryActionsViewModel(application: Application) : AndroidViewModel(ap
     fun onConsentResult(granted: Boolean) {
         val pending = _consent.value ?: return
         _consent.value = null
-        if (granted) viewModelScope.launch { library.finishDelete(pending.entry) }
+        if (granted) viewModelScope.launch { library.finishDelete(pending.entries) }
     }
 
-    fun move(entry: HistoryEntry, folderId: Long?) {
-        viewModelScope.launch { library.move(entry.id, folderId) }
+    fun move(entryIds: Collection<Long>, folderId: Long?) {
+        if (entryIds.isEmpty()) return
+        viewModelScope.launch { library.move(entryIds, folderId) }
     }
 
-    /** "New folder…" from inside the move dialog: create it and file the entry in one go. */
-    fun moveToNewFolder(entry: HistoryEntry, name: String) {
-        if (name.isBlank()) return
+    /** "New folder…" from the move dialog: create it and file the selection in one go. */
+    fun moveToNewFolder(entryIds: Collection<Long>, name: String) {
+        if (name.isBlank() || entryIds.isEmpty()) return
         viewModelScope.launch {
             val id = library.createFolder(name)
-            library.move(entry.id, id)
+            library.move(entryIds, id)
         }
     }
 }

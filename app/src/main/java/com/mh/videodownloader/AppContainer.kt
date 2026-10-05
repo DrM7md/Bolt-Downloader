@@ -2,6 +2,7 @@ package com.mh.videodownloader
 
 import android.content.Context
 import androidx.room.Room
+import com.mh.videodownloader.data.DeviceFolderSource
 import com.mh.videodownloader.data.DownloadQueue
 import com.mh.videodownloader.data.LibraryRepository
 import com.mh.videodownloader.data.MediaRepository
@@ -38,6 +39,8 @@ class AppContainer(private val context: Context) {
     val historyDao by lazy { database.historyDao() }
 
     val library by lazy { LibraryRepository(context, database) }
+
+    val deviceFolders = DeviceFolderSource(context)
 
     val mediaRepository = MediaRepository(engine) { cookiesFile.takeIf { it.exists() } }
 

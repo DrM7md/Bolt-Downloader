@@ -4,7 +4,10 @@ import android.app.Activity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.IntentSenderRequest
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -23,9 +26,9 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.PlaylistPlay
+import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material.icons.rounded.CreateNewFolder
 import androidx.compose.material.icons.rounded.DeleteOutline
-import androidx.compose.material.icons.rounded.DriveFileMove
 import androidx.compose.material.icons.rounded.Folder
 import androidx.compose.material.icons.rounded.FolderOff
 import androidx.compose.material.icons.rounded.MusicNote
@@ -52,6 +55,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -61,14 +65,22 @@ import com.mh.videodownloader.R
 import com.mh.videodownloader.data.db.Folder
 import com.mh.videodownloader.data.db.HistoryEntry
 import com.mh.videodownloader.ui.common.AppCard
+import com.mh.videodownloader.ui.common.Brand
 import com.mh.videodownloader.ui.common.Chip
+import com.mh.videodownloader.ui.common.SourceChip
 import com.mh.videodownloader.util.formatBytes
 import com.mh.videodownloader.util.formatDate
 import com.mh.videodownloader.util.formatDuration
 import com.mh.videodownloader.util.ltr
 import com.mh.videodownloader.ui.theme.forContent
 
-/** One downloaded file, as listed in History, the library and inside a folder. */
+/**
+ * One downloaded file, as listed in History, the library and inside a folder.
+ *
+ * Tap plays. Long-press starts selecting; while selecting, tap ticks and a long-press on a ticked
+ * card picks the whole selection up to drag onto a folder.
+ */
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun MediaEntryCard(
     entry: HistoryEntry,
@@ -76,15 +88,43 @@ fun MediaEntryCard(
     onShare: () -> Unit,
     onDelete: () -> Unit,
     modifier: Modifier = Modifier,
-    onMove: (() -> Unit)? = null,
+    selection: EntrySelection? = null,
 ) {
-    AppCard(modifier = modifier) {
+    val selecting = selection?.active == true
+    val selected = selection?.ids?.contains(entry.id) == true
+    val scheme = MaterialTheme.colorScheme
+
+    // Order matters: the drag source sits inside the click handler so it sees the touch first.
+    // The other way round, the tap detector consumes the press and the drag never starts.
+    val gestures = Modifier
+        .combinedClickable(
+            onClick = { if (selection != null && selecting) selection.toggle(entry.id) else onPlay() },
+            onLongClick = if (selection != null && !selecting) {
+                { selection.start(entry.id) }
+            } else {
+                null
+            },
+        )
+        .then(
+            if (selection != null && selecting && selected) Modifier.dragSelection { selection.ids }
+            else Modifier
+        )
+
+    AppCard(
+        modifier = modifier
+            .then(
+                if (selected) Modifier.border(2.dp, scheme.primary, MaterialTheme.shapes.large)
+                else Modifier
+            )
+            .clip(MaterialTheme.shapes.large)
+            .then(gestures),
+    ) {
         Column(modifier = Modifier.padding(12.dp)) {
             Row(
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                Thumbnail(entry)
+                Thumbnail(entry, checked = if (selecting) selected else null)
                 Column(
                     modifier = Modifier.weight(1f),
                     verticalArrangement = Arrangement.spacedBy(6.dp),
@@ -101,19 +141,19 @@ fun MediaEntryCard(
                         horizontalArrangement = Arrangement.spacedBy(6.dp),
                         verticalArrangement = Arrangement.spacedBy(6.dp),
                     ) {
-                        Chip(text = entry.sourceLabel)
+                        SourceChip(Brand.of(entry.sourceLabel))
                         formatBytes(entry.sizeBytes)?.let {
                             Chip(
                                 text = ltr(it),
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                containerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
+                                color = scheme.onSurfaceVariant,
+                                containerColor = scheme.surfaceContainerHighest,
                             )
                         }
                         if (entry.durationSec > 0) {
                             Chip(
                                 text = ltr(formatDuration(entry.durationSec)),
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                containerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
+                                color = scheme.onSurfaceVariant,
+                                containerColor = scheme.surfaceContainerHighest,
                             )
                         }
                     }
@@ -122,50 +162,47 @@ fun MediaEntryCard(
 
             Spacer(Modifier.height(8.dp))
 
-            // The actions take the full card width rather than sharing the text column: beside
-            // the thumbnail, four buttons and the date do not fit on a 360dp screen.
-            Row(verticalAlignment = Alignment.CenterVertically) {
+            Row(
+                modifier = Modifier.height(34.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
                 Text(
                     text = ltr(formatDate(entry.createdAt)),
                     style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    color = scheme.onSurfaceVariant,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                     modifier = Modifier.weight(1f),
                 )
-                CardAction(
-                    icon = Icons.Rounded.PlayArrow,
-                    description = stringResource(R.string.open),
-                    tint = MaterialTheme.colorScheme.primary,
-                    onClick = onPlay,
-                )
-                CardAction(
-                    icon = Icons.Rounded.Share,
-                    description = stringResource(R.string.share),
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                    onClick = onShare,
-                )
-                if (onMove != null) {
+                // While selecting, the bar at the top acts on the selection; per-card buttons
+                // would only invite acting on the wrong thing.
+                if (!selecting) {
                     CardAction(
-                        icon = Icons.Rounded.DriveFileMove,
-                        description = stringResource(R.string.move_to_folder),
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                        onClick = onMove,
+                        icon = Icons.Rounded.PlayArrow,
+                        description = stringResource(R.string.open),
+                        tint = scheme.primary,
+                        onClick = onPlay,
+                    )
+                    CardAction(
+                        icon = Icons.Rounded.Share,
+                        description = stringResource(R.string.share),
+                        tint = scheme.onSurfaceVariant,
+                        onClick = onShare,
+                    )
+                    CardAction(
+                        icon = Icons.Rounded.DeleteOutline,
+                        description = stringResource(R.string.delete),
+                        tint = scheme.error,
+                        onClick = onDelete,
                     )
                 }
-                CardAction(
-                    icon = Icons.Rounded.DeleteOutline,
-                    description = stringResource(R.string.delete),
-                    tint = MaterialTheme.colorScheme.error,
-                    onClick = onDelete,
-                )
             }
         }
     }
 }
 
 @Composable
-private fun Thumbnail(entry: HistoryEntry) {
+private fun Thumbnail(entry: HistoryEntry, checked: Boolean?) {
     Box(
         modifier = Modifier
             .size(width = 92.dp, height = 62.dp)
@@ -181,19 +218,36 @@ private fun Thumbnail(entry: HistoryEntry) {
                 contentScale = ContentScale.Crop,
             )
         }
+        val scheme = MaterialTheme.colorScheme
         Box(
             modifier = Modifier
                 .size(26.dp)
                 .clip(CircleShape)
-                .background(Color.Black.copy(alpha = 0.45f)),
+                .background(
+                    when (checked) {
+                        true -> scheme.primary
+                        false -> Color.White.copy(alpha = 0.85f)
+                        null -> Color.Black.copy(alpha = 0.45f)
+                    }
+                ),
             contentAlignment = Alignment.Center,
         ) {
-            Icon(
-                if (entry.isAudio) Icons.Rounded.MusicNote else Icons.Rounded.PlayArrow,
-                contentDescription = null,
-                tint = Color.White,
-                modifier = Modifier.size(16.dp),
-            )
+            when (checked) {
+                true -> Icon(
+                    Icons.Rounded.Check,
+                    contentDescription = null,
+                    tint = scheme.onPrimary,
+                    modifier = Modifier.size(17.dp),
+                )
+
+                false -> Unit
+                null -> Icon(
+                    if (entry.isAudio) Icons.Rounded.MusicNote else Icons.Rounded.PlayArrow,
+                    contentDescription = null,
+                    tint = Color.White,
+                    modifier = Modifier.size(16.dp),
+                )
+            }
         }
     }
 }
@@ -210,10 +264,10 @@ private fun CardAction(
     }
 }
 
-/** Remove from the list, and only touch the real file when the user ticks the box. */
+/** Remove from the list, and only touch the real files when the user ticks the box. */
 @Composable
-fun DeleteEntryDialog(
-    entry: HistoryEntry,
+fun DeleteEntriesDialog(
+    entries: List<HistoryEntry>,
     onConfirm: (deleteFile: Boolean) -> Unit,
     onDismiss: () -> Unit,
 ) {
@@ -224,7 +278,8 @@ fun DeleteEntryDialog(
         text = {
             Column {
                 Text(
-                    entry.title,
+                    text = entries.singleOrNull()?.title
+                        ?: pluralStringResource(R.plurals.items_count, entries.size, entries.size),
                     style = MaterialTheme.typography.bodyMedium.forContent(),
                     maxLines = 3,
                     overflow = TextOverflow.Ellipsis,
@@ -284,7 +339,8 @@ fun FolderNameDialog(
 
 @Composable
 fun MoveToFolderDialog(
-    entry: HistoryEntry,
+    /** Where the selection currently lives; a row is highlighted only if they all share it. */
+    currentFolders: Set<Long?>,
     folders: List<Folder>,
     onMove: (Long?) -> Unit,
     onNewFolder: (String) -> Unit,
@@ -322,7 +378,7 @@ fun MoveToFolderDialog(
                 FolderChoice(
                     icon = Icons.Rounded.FolderOff,
                     label = stringResource(R.string.no_folder),
-                    selected = entry.folderId == null,
+                    selected = currentFolders == setOf(null),
                     onClick = { onMove(null) },
                 )
                 folders.forEach { folder ->
@@ -330,7 +386,7 @@ fun MoveToFolderDialog(
                         icon = if (folder.isPlaylist) Icons.AutoMirrored.Rounded.PlaylistPlay
                         else Icons.Rounded.Folder,
                         label = folder.name,
-                        selected = entry.folderId == folder.id,
+                        selected = currentFolders == setOf(folder.id),
                         onClick = { onMove(folder.id) },
                     )
                 }

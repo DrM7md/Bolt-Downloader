@@ -41,6 +41,8 @@ import coil3.compose.AsyncImage
 import com.mh.videodownloader.R
 import com.mh.videodownloader.domain.PlaylistEntry
 import com.mh.videodownloader.ui.common.AppCard
+import com.mh.videodownloader.ui.common.Brand
+import com.mh.videodownloader.ui.common.SourceIcon
 import com.mh.videodownloader.ui.common.Chip
 import com.mh.videodownloader.ui.common.GradientButton
 import com.mh.videodownloader.ui.common.SectionTitle
@@ -63,9 +65,6 @@ fun PlaylistHeader(
     modifier: Modifier = Modifier,
 ) {
     val info = state.info
-    val sourceLabel = info.source.brandName
-        ?: stringResource(info.source.labelRes ?: R.string.source_other)
-
     Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(14.dp)) {
         AppCard {
             Column(modifier = Modifier.padding(16.dp)) {
@@ -91,13 +90,21 @@ fun PlaylistHeader(
                             maxLines = 2,
                             overflow = TextOverflow.Ellipsis,
                         )
-                        Text(
-                            text = info.uploader?.let { "$sourceLabel · $it" } ?: sourceLabel,
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis,
-                        )
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(6.dp),
+                        ) {
+                            SourceIcon(Brand.of(info.source), size = 15.dp)
+                            info.uploader?.let {
+                                Text(
+                                    text = it,
+                                    style = MaterialTheme.typography.bodySmall.forContent(),
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis,
+                                )
+                            }
+                        }
                     }
                 }
 

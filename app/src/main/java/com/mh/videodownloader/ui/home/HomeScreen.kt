@@ -77,12 +77,14 @@ import com.mh.videodownloader.domain.DownloadTask
 import com.mh.videodownloader.domain.FormatOption
 import com.mh.videodownloader.domain.MediaInfo
 import com.mh.videodownloader.ui.common.AppCard
+import com.mh.videodownloader.ui.common.Brand
+import com.mh.videodownloader.ui.common.BrandDisc
+import com.mh.videodownloader.ui.common.SourceChip
 import com.mh.videodownloader.ui.common.Chip
 import com.mh.videodownloader.ui.common.GradientButton
 import com.mh.videodownloader.ui.common.SectionTitle
 import com.mh.videodownloader.ui.common.SelectableRow
 import com.mh.videodownloader.ui.common.ShimmerBlock
-import com.mh.videodownloader.ui.theme.SourceColors
 import com.mh.videodownloader.ui.theme.heroGradient
 import com.mh.videodownloader.util.formatBytes
 import com.mh.videodownloader.util.formatDuration
@@ -267,12 +269,20 @@ private fun Hero(modifier: Modifier = Modifier) {
                 style = MaterialTheme.typography.headlineSmall,
                 color = Color.White,
             )
-            Spacer(Modifier.height(8.dp))
-            Text(
-                text = stringOf(R.string.home_subtitle),
-                style = MaterialTheme.typography.bodySmall,
-                color = Color.White.copy(alpha = 0.82f),
-            )
+            Spacer(Modifier.height(14.dp))
+            // The sites as their own marks rather than a line of names.
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                Brand.entries.forEach { BrandDisc(it) }
+                Text(
+                    text = ltr("+1000"),
+                    style = MaterialTheme.typography.labelLarge,
+                    color = Color.White.copy(alpha = 0.85f),
+                    modifier = Modifier.padding(start = 2.dp),
+                )
+            }
         }
     }
 }
@@ -546,9 +556,6 @@ private fun ReadyContent(
 
 @Composable
 private fun MediaCard(info: MediaInfo, modifier: Modifier = Modifier) {
-    val sourceLabel = info.source.brandName ?: stringOf(info.source.labelRes ?: R.string.source_other)
-    val accent = SourceColors[sourceLabel] ?: MaterialTheme.colorScheme.primary
-
     AppCard(modifier = modifier) {
         Row(
             modifier = Modifier.padding(14.dp),
@@ -596,11 +603,7 @@ private fun MediaCard(info: MediaInfo, modifier: Modifier = Modifier) {
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(6.dp),
                 ) {
-                    Chip(
-                        text = sourceLabel,
-                        color = accent,
-                        containerColor = accent.copy(alpha = 0.14f),
-                    )
+                    SourceChip(Brand.of(info.source))
                     if (info.durationSec > 0) {
                         Chip(
                             text = ltr(formatDuration(info.durationSec)),

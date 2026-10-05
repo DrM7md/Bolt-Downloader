@@ -7,7 +7,6 @@
     <string name="tab_settings">Settings</string>
 
     <string name="home_title">Paste a link — we\'ll do the rest</string>
-    <string name="home_subtitle">YouTube · Instagram · TikTok · X · Facebook and 1000+ sites</string>
     <string name="url_hint">Paste the video link here</string>
     <string name="paste">Paste</string>
     <string name="clear">Clear</string>
@@ -146,4 +145,19 @@
         <item quantity="one">%1$d video</item>
         <item quantity="other">%1$d videos</item>
     </plurals>
+    <string name="library_source">Library source</string>
+    <string name="library_source_app">App downloads</string>
+    <string name="library_source_device">Device folder</string>
+    <string name="library_source_device_desc">The library shows every video in the folder you pick</string>
+    <string name="library_folder_none">No folder chosen</string>
+    <string name="choose_folder">Choose folder</string>
+    <string name="change">Change</string>
+    <string name="folder_unreadable">Could not read the folder — pick it again in Settings</string>
+    <string name="delete_file_title">Delete the file from the device?</string>
+    <plurals name="selected_count">
+        <item quantity="one">%1$d selected</item>
+        <item quantity="other">%1$d selected</item>
+    </plurals>
+    <string name="drag_to_folder">Drag the selection onto a folder, or tap one</string>
+    <string name="hold_to_select">Long-press a video to select several</string>
 </resources>

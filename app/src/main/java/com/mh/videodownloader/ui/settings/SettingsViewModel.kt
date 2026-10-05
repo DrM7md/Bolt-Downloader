@@ -1,8 +1,10 @@
 package com.mh.videodownloader.ui.settings
 
 import android.app.Application
+import android.content.Intent
 import android.net.Uri
 import androidx.appcompat.app.AppCompatDelegate
+import androidx.core.net.toUri
 import androidx.core.os.LocaleListCompat
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
@@ -12,6 +14,7 @@ import com.mh.videodownloader.data.engine.YtDlpEngine
 import com.mh.videodownloader.data.prefs.AppFont
 import com.mh.videodownloader.data.prefs.AppLanguage
 import com.mh.videodownloader.data.prefs.AppSettings
+import com.mh.videodownloader.data.prefs.LibrarySource
 import com.mh.videodownloader.data.prefs.ThemeMode
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -67,6 +70,36 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
 
     fun setFont(font: AppFont) {
         viewModelScope.launch { container.settings.setFont(font) }
+    }
+
+    private val _folderName = MutableStateFlow<String?>(null)
+    /** Display name of the picked device folder, for the settings row. */
+    val folderName: StateFlow<String?> = _folderName.asStateFlow()
+
+    fun refreshFolderName(treeUri: String?) {
+        viewModelScope.launch {
+            _folderName.value = treeUri?.let { container.deviceFolders.displayName(it.toUri()) }
+        }
+    }
+
+    fun setLibrarySource(source: LibrarySource) {
+        viewModelScope.launch { container.settings.setLibrarySource(source) }
+    }
+
+    /**
+     * Keeps read/write access to the picked folder across restarts. Without the persistable grant
+     * the permission dies with this process and the library goes blank on next launch.
+     */
+    fun onFolderPicked(uri: Uri) {
+        val app = getApplication<Application>()
+        runCatching {
+            app.contentResolver.takePersistableUriPermission(
+                uri,
+                Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION,
+            )
+        }
+        viewModelScope.launch { container.settings.setLibraryFolder(uri.toString()) }
+        refreshFolderName(uri.toString())
     }
 
     fun setBackgroundPlayback(enabled: Boolean) {

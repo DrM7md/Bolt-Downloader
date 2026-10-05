@@ -9,7 +9,6 @@
 
     <!-- Home / input -->
     <string name="home_title">ألصق الرابط… واترك الباقي علينا</string>
-    <string name="home_subtitle">يوتيوب · إنستغرام · تيك توك · إكس · فيسبوك وأكثر من ألف موقع</string>
     <string name="url_hint">الصق رابط الفيديو هنا</string>
     <string name="paste">لصق</string>
     <string name="clear">مسح</string>
@@ -160,4 +159,23 @@
         <item quantity="many">%1$d مقطعا</item>
         <item quantity="other">%1$d مقطع</item>
     </plurals>
+    <string name="library_source">مصدر المكتبة</string>
+    <string name="library_source_app">تحميلات التطبيق</string>
+    <string name="library_source_device">مجلد من الجهاز</string>
+    <string name="library_source_device_desc">تعرض المكتبة كل الفيديوهات في المجلد الذي تختاره</string>
+    <string name="library_folder_none">لم يتم اختيار مجلد</string>
+    <string name="choose_folder">اختيار مجلد</string>
+    <string name="change">تغيير</string>
+    <string name="folder_unreadable">تعذرت قراءة المجلد — اختره من جديد من الإعدادات</string>
+    <string name="delete_file_title">حذف الملف من الجهاز؟</string>
+    <plurals name="selected_count">
+        <item quantity="zero">لا شيء محدد</item>
+        <item quantity="one">مقطع واحد محدد</item>
+        <item quantity="two">مقطعان محددان</item>
+        <item quantity="few">%1$d مقاطع محددة</item>
+        <item quantity="many">%1$d مقطعا محددا</item>
+        <item quantity="other">%1$d مقطع محدد</item>
+    </plurals>
+    <string name="drag_to_folder">اسحب المحدد إلى مجلد أو اضغط عليه</string>
+    <string name="hold_to_select">اضغط مطولا على مقطع لتحديد أكثر من واحد</string>
 </resources>

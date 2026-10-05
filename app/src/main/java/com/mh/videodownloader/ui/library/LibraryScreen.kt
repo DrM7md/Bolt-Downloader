@@ -1,6 +1,7 @@
 package com.mh.videodownloader.ui.library
 
 import android.widget.Toast
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -8,6 +9,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -51,8 +53,8 @@ import com.mh.videodownloader.data.db.HistoryEntry
 import com.mh.videodownloader.ui.common.EmptyState
 import com.mh.videodownloader.ui.common.SectionTitle
 import com.mh.videodownloader.ui.theme.brandGradient
-import com.mh.videodownloader.util.shareMedia
 import com.mh.videodownloader.ui.theme.forContent
+import com.mh.videodownloader.util.shareMedia
 
 @Composable
 fun LibraryScreen(
@@ -62,102 +64,142 @@ fun LibraryScreen(
     onPlay: (HistoryEntry) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val folders by viewModel.folderSummaries.collectAsStateWithLifecycle()
-    val unsorted by viewModel.unsorted.collectAsStateWithLifecycle()
+    val loadedFolders by viewModel.folderSummaries.collectAsStateWithLifecycle()
+    val loadedUnsorted by viewModel.unsorted.collectAsStateWithLifecycle()
+    val folders = loadedFolders.orEmpty()
+    val unsorted = loadedUnsorted.orEmpty()
+    val loaded = loadedFolders != null && loadedUnsorted != null
     val allFolders by viewModel.folders.collectAsStateWithLifecycle()
     val context = LocalContext.current
 
+    val selection = rememberEntrySelection()
     var creating by remember { mutableStateOf(false) }
-    var moving by remember { mutableStateOf<HistoryEntry?>(null) }
-    var deleting by remember { mutableStateOf<HistoryEntry?>(null) }
+    var moving by remember { mutableStateOf(false) }
+    var deleting by remember { mutableStateOf<List<HistoryEntry>?>(null) }
 
     DeleteConsentHandler(viewModel)
+    BackHandler(enabled = selection.active) { selection.clear() }
 
-    LazyColumn(
-        modifier = modifier.fillMaxWidth(),
-        contentPadding = PaddingValues(
-            start = 16.dp,
-            end = 16.dp,
-            bottom = contentPadding.calculateBottomPadding() + 24.dp,
-        ),
-        verticalArrangement = Arrangement.spacedBy(10.dp),
-    ) {
-        item {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .statusBarsPadding()
-                    .padding(start = 4.dp, end = 4.dp, top = 20.dp, bottom = 6.dp),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Text(
-                    text = stringResource(R.string.library_title),
-                    style = MaterialTheme.typography.headlineSmall,
-                    modifier = Modifier.weight(1f),
-                )
-                FilledTonalButton(onClick = { creating = true }) {
-                    Icon(
-                        Icons.Rounded.CreateNewFolder,
-                        contentDescription = null,
-                        modifier = Modifier.size(18.dp),
+    val moveSelection: (List<Long>, Long?) -> Unit = { ids, folderId ->
+        viewModel.move(ids, folderId)
+        selection.clear()
+    }
+
+    Box(modifier = modifier.fillMaxSize()) {
+        LazyColumn(
+            modifier = Modifier.fillMaxWidth(),
+            contentPadding = PaddingValues(
+                start = 16.dp,
+                end = 16.dp,
+                // Room for the drop tray, so the last card can still be reached while selecting.
+                bottom = contentPadding.calculateBottomPadding() + if (selection.active) 140.dp else 24.dp,
+            ),
+            verticalArrangement = Arrangement.spacedBy(10.dp),
+        ) {
+            item {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .statusBarsPadding()
+                        .padding(start = 4.dp, end = 4.dp, top = 20.dp, bottom = 6.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text(
+                        text = stringResource(R.string.library_title),
+                        style = MaterialTheme.typography.headlineSmall,
+                        modifier = Modifier.weight(1f),
                     )
-                    Spacer(Modifier.width(6.dp))
-                    Text(stringResource(R.string.new_folder))
-                }
-            }
-        }
-
-        if (folders.isEmpty() && unsorted.isEmpty()) {
-            item {
-                EmptyState(
-                    icon = Icons.Rounded.VideoLibrary,
-                    title = stringResource(R.string.library_empty_title),
-                    subtitle = stringResource(R.string.library_empty_sub),
-                    modifier = Modifier.padding(top = 40.dp),
-                )
-            }
-        }
-
-        if (folders.isNotEmpty()) {
-            item { SectionTitle(stringResource(R.string.folders)) }
-            // Two cards per row, laid out by hand: a grid nested inside a LazyColumn would
-            // fight it for the scroll.
-            // Keys are namespaced: folder and entry ids are both small integers from separate
-            // tables, so the first folder and the first video would otherwise collide.
-            items(folders.chunked(2), key = { row -> "folder-" + row.first().folder.id }) { row ->
-                Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                    row.forEach { summary ->
-                        FolderCard(
-                            summary = summary,
-                            onClick = { onOpenFolder(summary.folder.id) },
-                            modifier = Modifier.weight(1f),
+                    FilledTonalButton(onClick = { creating = true }) {
+                        Icon(
+                            Icons.Rounded.CreateNewFolder,
+                            contentDescription = null,
+                            modifier = Modifier.size(18.dp),
                         )
+                        Spacer(Modifier.width(6.dp))
+                        Text(stringResource(R.string.new_folder))
                     }
-                    if (row.size == 1) Spacer(Modifier.weight(1f))
+                }
+            }
+
+            if (loaded && folders.isEmpty() && unsorted.isEmpty()) {
+                item {
+                    EmptyState(
+                        icon = Icons.Rounded.VideoLibrary,
+                        title = stringResource(R.string.library_empty_title),
+                        subtitle = stringResource(R.string.library_empty_sub),
+                        modifier = Modifier.padding(top = 40.dp),
+                    )
+                }
+            }
+
+            if (folders.isNotEmpty()) {
+                item { SectionTitle(stringResource(R.string.folders)) }
+                // Two cards per row, laid out by hand: a grid nested inside a LazyColumn would
+                // fight it for the scroll. Keys are namespaced: folder and entry ids are both
+                // small integers from separate tables and would otherwise collide.
+                items(folders.chunked(2), key = { row -> "folder-" + row.first().folder.id }) { row ->
+                    Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                        row.forEach { summary ->
+                            FolderCard(
+                                summary = summary,
+                                onClick = { onOpenFolder(summary.folder.id) },
+                                onDrop = moveSelection,
+                                modifier = Modifier.weight(1f),
+                            )
+                        }
+                        if (row.size == 1) Spacer(Modifier.weight(1f))
+                    }
+                }
+            }
+
+            if (unsorted.isNotEmpty()) {
+                item {
+                    Column(modifier = Modifier.padding(top = 8.dp)) {
+                        SectionTitle(text = stringResource(R.string.unsorted) + "  ·  " + unsorted.size)
+                        if (!selection.active) {
+                            Text(
+                                text = stringResource(R.string.hold_to_select),
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.padding(start = 4.dp, end = 4.dp, bottom = 8.dp),
+                            )
+                        }
+                    }
+                }
+                items(unsorted, key = { "entry-" + it.id }) { entry ->
+                    MediaEntryCard(
+                        entry = entry,
+                        selection = selection,
+                        onPlay = { onPlay(entry) },
+                        onShare = {
+                            if (!shareMedia(context, entry.fileUri, entry.mimeType, entry.title)) {
+                                Toast.makeText(context, R.string.cannot_share, Toast.LENGTH_SHORT).show()
+                            }
+                        },
+                        onDelete = { deleting = listOf(entry) },
+                    )
                 }
             }
         }
 
-        if (unsorted.isNotEmpty()) {
-            item {
-                SectionTitle(
-                    text = stringResource(R.string.unsorted) + "  ·  " + unsorted.size,
-                    modifier = Modifier.padding(top = 8.dp),
-                )
-            }
-            items(unsorted, key = { "entry-" + it.id }) { entry ->
-                MediaEntryCard(
-                    entry = entry,
-                    onPlay = { onPlay(entry) },
-                    onShare = {
-                        if (!shareMedia(context, entry.fileUri, entry.mimeType, entry.title)) {
-                            Toast.makeText(context, R.string.cannot_share, Toast.LENGTH_SHORT).show()
-                        }
-                    },
-                    onMove = { moving = entry },
-                    onDelete = { deleting = entry },
-                )
-            }
+        if (selection.active) {
+            SelectionBar(
+                count = selection.ids.size,
+                onClose = selection::clear,
+                onSelectAll = { selection.selectAll(unsorted.map { it.id }) },
+                onMove = { moving = true },
+                onDelete = { deleting = unsorted.filter { it.id in selection.ids } },
+                modifier = Modifier.align(Alignment.TopCenter),
+            )
+            FolderDropTray(
+                folders = allFolders,
+                onMove = moveSelection,
+                onTap = { folderId -> moveSelection(selection.ids.toList(), folderId) },
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .padding(bottom = contentPadding.calculateBottomPadding() + 8.dp)
+                    .padding(horizontal = 8.dp),
+            )
         }
     }
 
@@ -174,27 +216,30 @@ fun LibraryScreen(
         )
     }
 
-    moving?.let { entry ->
+    if (moving) {
+        val ids = selection.ids
         MoveToFolderDialog(
-            entry = entry,
+            currentFolders = unsorted.filter { it.id in ids }.map { it.folderId }.toSet(),
             folders = allFolders,
             onMove = { folderId ->
-                viewModel.move(entry, folderId)
-                moving = null
+                moveSelection(ids.toList(), folderId)
+                moving = false
             },
             onNewFolder = { name ->
-                viewModel.moveToNewFolder(entry, name)
-                moving = null
+                viewModel.moveToNewFolder(ids, name)
+                selection.clear()
+                moving = false
             },
-            onDismiss = { moving = null },
+            onDismiss = { moving = false },
         )
     }
 
-    deleting?.let { entry ->
-        DeleteEntryDialog(
-            entry = entry,
+    deleting?.let { entries ->
+        DeleteEntriesDialog(
+            entries = entries,
             onConfirm = { deleteFile ->
-                viewModel.delete(entry, deleteFile)
+                viewModel.delete(entries, deleteFile)
+                selection.clear()
                 deleting = null
             },
             onDismiss = { deleting = null },
@@ -206,17 +251,22 @@ fun LibraryScreen(
 private fun FolderCard(
     summary: FolderSummary,
     onClick: () -> Unit,
+    onDrop: (List<Long>, Long?) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val folder = summary.folder
+    var hovered by remember { mutableStateOf(false) }
+    val scheme = MaterialTheme.colorScheme
     Surface(
         onClick = onClick,
-        modifier = modifier,
+        modifier = modifier
+            .dropHighlight(hovered, scheme.primary)
+            .folderDropTarget(folderId = folder.id, onDrop = onDrop, onHover = { hovered = it }),
         shape = MaterialTheme.shapes.large,
-        color = MaterialTheme.colorScheme.surfaceContainerLow,
+        color = if (hovered) scheme.primary.copy(alpha = 0.12f) else scheme.surfaceContainerLow,
         border = androidx.compose.foundation.BorderStroke(
             1.dp,
-            MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f),
+            scheme.outlineVariant.copy(alpha = 0.4f),
         ),
     ) {
         Column {
@@ -276,7 +326,7 @@ private fun FolderCard(
                 Text(
                     text = pluralStringResource(R.plurals.items_count, summary.itemCount, summary.itemCount),
                     style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    color = scheme.onSurfaceVariant,
                 )
             }
         }

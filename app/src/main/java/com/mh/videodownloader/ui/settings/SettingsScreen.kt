@@ -42,6 +42,9 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.material.icons.rounded.VideoLibrary
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -57,6 +60,8 @@ import com.mh.videodownloader.data.prefs.AppLanguage
 import com.mh.videodownloader.data.prefs.ThemeMode
 import com.mh.videodownloader.ui.common.AppCard
 import com.mh.videodownloader.ui.common.SectionTitle
+import com.mh.videodownloader.ui.theme.forContent
+import com.mh.videodownloader.data.prefs.LibrarySource
 import com.mh.videodownloader.ui.theme.fontFamilyOf
 import com.mh.videodownloader.util.ltr
 
@@ -69,6 +74,13 @@ fun SettingsScreen(
     val settings by viewModel.settings.collectAsStateWithLifecycle()
     val engineVersion by viewModel.engineVersion.collectAsStateWithLifecycle()
     val updating by viewModel.isUpdating.collectAsStateWithLifecycle()
+    val folderName by viewModel.folderName.collectAsStateWithLifecycle()
+
+    LaunchedEffect(settings.libraryFolder) { viewModel.refreshFolderName(settings.libraryFolder) }
+
+    val folderPicker = rememberLauncherForActivityResult(
+        ActivityResultContracts.OpenDocumentTree()
+    ) { uri -> uri?.let(viewModel::onFolderPicked) }
 
     val cookiePicker = rememberLauncherForActivityResult(
         ActivityResultContracts.OpenDocument()
@@ -209,6 +221,75 @@ fun SettingsScreen(
                     checked = settings.backgroundPlayback,
                     onCheckedChange = viewModel::setBackgroundPlayback,
                 )
+            }
+        }
+
+        Spacer(Modifier.height(22.dp))
+
+        // ---- Library source -------------------------------------------------------------
+        SectionTitle(
+            text = stringResource(R.string.tab_library),
+            modifier = Modifier.padding(start = 20.dp, end = 20.dp),
+        )
+        AppCard(modifier = Modifier.padding(horizontal = 16.dp)) {
+            Column(modifier = Modifier.padding(16.dp)) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    IconBubble(Icons.Rounded.VideoLibrary)
+                    Spacer(Modifier.width(12.dp))
+                    Text(
+                        text = stringResource(R.string.library_source),
+                        style = MaterialTheme.typography.titleSmall,
+                    )
+                }
+                Spacer(Modifier.height(10.dp))
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    ThemeChip(
+                        label = stringResource(R.string.library_source_app),
+                        icon = null,
+                        selected = settings.librarySource == LibrarySource.APP_DOWNLOADS,
+                        onClick = { viewModel.setLibrarySource(LibrarySource.APP_DOWNLOADS) },
+                    )
+                    ThemeChip(
+                        label = stringResource(R.string.library_source_device),
+                        icon = null,
+                        selected = settings.librarySource == LibrarySource.DEVICE_FOLDER,
+                        onClick = {
+                            // No folder yet: picking one is what choosing this option means.
+                            if (settings.libraryFolder == null) folderPicker.launch(null)
+                            else viewModel.setLibrarySource(LibrarySource.DEVICE_FOLDER)
+                        },
+                    )
+                }
+                if (settings.librarySource == LibrarySource.DEVICE_FOLDER) {
+                    Spacer(Modifier.height(12.dp))
+                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
+                    Spacer(Modifier.height(12.dp))
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        IconBubble(Icons.Rounded.Folder)
+                        Spacer(Modifier.width(12.dp))
+                        Column(Modifier.weight(1f)) {
+                            Text(
+                                text = folderName ?: stringResource(R.string.library_folder_none),
+                                style = MaterialTheme.typography.titleSmall.forContent(),
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
+                            )
+                            Text(
+                                text = stringResource(R.string.library_source_device_desc),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        }
+                        TextButton(onClick = { folderPicker.launch(null) }) {
+                            Text(
+                                stringResource(
+                                    if (settings.libraryFolder == null) R.string.choose_folder
+                                    else R.string.change
+                                )
+                            )
+                        }
+                    }
+                }
             }
         }
 

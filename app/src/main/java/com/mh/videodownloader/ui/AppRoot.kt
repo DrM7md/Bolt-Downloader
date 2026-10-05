@@ -1,6 +1,8 @@
 package com.mh.videodownloader.ui
 
 import android.net.Uri
+import androidx.compose.animation.EnterTransition
+import androidx.compose.animation.ExitTransition
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material.icons.Icons
@@ -38,11 +40,13 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.mh.videodownloader.R
+import com.mh.videodownloader.data.prefs.LibrarySource
 import com.mh.videodownloader.player.PlayerScreen
 import com.mh.videodownloader.ui.history.HistoryScreen
 import com.mh.videodownloader.ui.history.HistoryViewModel
 import com.mh.videodownloader.ui.home.HomeScreen
 import com.mh.videodownloader.ui.home.HomeViewModel
+import com.mh.videodownloader.ui.library.DeviceLibraryScreen
 import com.mh.videodownloader.ui.library.FolderScreen
 import com.mh.videodownloader.ui.library.FolderViewModel
 import com.mh.videodownloader.ui.library.LibraryScreen
@@ -150,6 +154,11 @@ fun AppRoot(
             navController = navController,
             startDestination = Destination.HOME.route,
             modifier = Modifier.fillMaxSize(),
+            // Instant switches: the default cross-fade read as lag, not polish.
+            enterTransition = { EnterTransition.None },
+            exitTransition = { ExitTransition.None },
+            popEnterTransition = { EnterTransition.None },
+            popExitTransition = { ExitTransition.None },
         ) {
             composable(Destination.HOME.route) {
                 HomeScreen(
@@ -159,12 +168,20 @@ fun AppRoot(
                 )
             }
             composable(Destination.LIBRARY.route) {
-                LibraryScreen(
-                    viewModel = libraryViewModel,
-                    contentPadding = innerPadding,
-                    onOpenFolder = { id -> navController.navigate("folder/$id") },
-                    onPlay = { e -> navController.openPlayer(e.fileUri, e.title, e.mimeType) },
-                )
+                if (settings.librarySource == LibrarySource.DEVICE_FOLDER) {
+                    DeviceLibraryScreen(
+                        viewModel = viewModel(),
+                        contentPadding = innerPadding,
+                        onPlay = { uri, title, mime -> navController.openPlayer(uri, title, mime) },
+                    )
+                } else {
+                    LibraryScreen(
+                        viewModel = libraryViewModel,
+                        contentPadding = innerPadding,
+                        onOpenFolder = { id -> navController.navigate("folder/$id") },
+                        onPlay = { e -> navController.openPlayer(e.fileUri, e.title, e.mimeType) },
+                    )
+                }
             }
             composable(
                 route = FOLDER_ROUTE,

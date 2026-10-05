@@ -13,11 +13,12 @@ import kotlinx.coroutines.launch
 
 class LibraryViewModel(application: Application) : EntryActionsViewModel(application) {
 
-    val folderSummaries: StateFlow<List<FolderSummary>> = library.folderSummaries
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
+    // Null until the first database read, so a cold start never flashes "library is empty".
+    val folderSummaries: StateFlow<List<FolderSummary>?> = library.folderSummaries
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
 
-    val unsorted: StateFlow<List<HistoryEntry>> = library.unsorted
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
+    val unsorted: StateFlow<List<HistoryEntry>?> = library.unsorted
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
 
     fun createFolder(name: String) {
         if (name.isBlank()) return
@@ -35,8 +36,8 @@ class FolderViewModel(
     val folder: StateFlow<Folder?> = library.folder(folderId)
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
 
-    val items: StateFlow<List<HistoryEntry>> = library.itemsIn(folderId)
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
+    val items: StateFlow<List<HistoryEntry>?> = library.itemsIn(folderId)
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
 
     fun rename(name: String) {
         if (name.isBlank()) return
