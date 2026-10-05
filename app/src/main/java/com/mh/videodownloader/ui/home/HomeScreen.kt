@@ -88,13 +88,14 @@ import com.mh.videodownloader.util.formatBytes
 import com.mh.videodownloader.util.formatDuration
 import com.mh.videodownloader.util.formatEta
 import com.mh.videodownloader.util.ltr
-import com.mh.videodownloader.util.openMedia
 import com.mh.videodownloader.util.percentOf
+import com.mh.videodownloader.ui.theme.forContent
 
 @Composable
 fun HomeScreen(
     viewModel: HomeViewModel,
     contentPadding: PaddingValues,
+    onPlay: (uri: String, title: String, mimeType: String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val url by viewModel.url.collectAsStateWithLifecycle()
@@ -214,11 +215,7 @@ fun HomeScreen(
                     onDismiss = { viewModel.dismissTask(task.id) },
                     onOpen = {
                         task.savedUri?.let { uri ->
-                            openMedia(
-                                context,
-                                uri,
-                                if (task.selection.isAudio) "audio/mpeg" else "video/mp4",
-                            )
+                            onPlay(uri, task.title, if (task.selection.isAudio) "audio/mpeg" else "video/mp4")
                         }
                     },
                     modifier = Modifier.padding(horizontal = 16.dp, vertical = 5.dp),
@@ -591,7 +588,7 @@ private fun MediaCard(info: MediaInfo, modifier: Modifier = Modifier) {
             Column(verticalArrangement = Arrangement.spacedBy(7.dp)) {
                 Text(
                     text = info.title,
-                    style = MaterialTheme.typography.titleSmall,
+                    style = MaterialTheme.typography.titleSmall.forContent(),
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis,
                 )
@@ -626,7 +623,7 @@ private fun MediaCard(info: MediaInfo, modifier: Modifier = Modifier) {
                         )
                         Text(
                             text = uploader,
-                            style = MaterialTheme.typography.bodySmall,
+                            style = MaterialTheme.typography.bodySmall.forContent(),
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis,
@@ -786,7 +783,7 @@ fun DownloadRow(
                 Spacer(Modifier.width(8.dp))
                 Text(
                     text = task.title,
-                    style = MaterialTheme.typography.titleSmall,
+                    style = MaterialTheme.typography.titleSmall.forContent(),
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                     modifier = Modifier.weight(1f),

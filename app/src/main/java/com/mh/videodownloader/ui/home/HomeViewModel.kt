@@ -286,6 +286,7 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
                 selection = selection,
                 durationSec = entry.durationSec,
                 uploader = state.info.uploader,
+                collection = state.info.title,
             )
         }
         DownloadService.enqueueAll(context, tasks)

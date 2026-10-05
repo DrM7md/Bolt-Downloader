@@ -21,7 +21,9 @@ object DownloadNotifier {
 
     const val CHANNEL_PROGRESS = "downloads"
     const val CHANNEL_COMPLETED = "completed"
-    const val FOREGROUND_ID = 1001
+    // Not 1001: that is Media3's default id for the playback notification, and sharing it
+    // made a download and a playing video overwrite each other's notification.
+    const val FOREGROUND_ID = 7001
 
     fun createChannels(context: Context) {
         val manager = context.getSystemService(NotificationManager::class.java) ?: return

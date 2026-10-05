@@ -30,6 +30,8 @@ data class AppSettings(
     val language: AppLanguage = AppLanguage.SYSTEM,
     val font: AppFont = AppFont.CAIRO,
     val autoUpdateEngine: Boolean = true,
+    /** Keep audio playing when the app leaves the screen. Off by default. */
+    val backgroundPlayback: Boolean = false,
     val lastEngineUpdate: Long = 0L,
     val hasCookies: Boolean = false,
 )
@@ -46,6 +48,7 @@ class SettingsRepository(private val context: Context) {
                 ?: AppLanguage.SYSTEM,
             font = AppFont.entries.firstOrNull { it.key == prefs[KEY_FONT] } ?: AppFont.CAIRO,
             autoUpdateEngine = prefs[KEY_AUTO_UPDATE] ?: true,
+            backgroundPlayback = prefs[KEY_BACKGROUND_PLAYBACK] ?: false,
             lastEngineUpdate = prefs[KEY_LAST_UPDATE] ?: 0L,
             hasCookies = prefs[KEY_HAS_COOKIES] ?: false,
         )
@@ -58,6 +61,9 @@ class SettingsRepository(private val context: Context) {
     suspend fun setFont(font: AppFont) = edit { it[KEY_FONT] = font.key }
 
     suspend fun setAutoUpdate(enabled: Boolean) = edit { it[KEY_AUTO_UPDATE] = enabled }
+
+    suspend fun setBackgroundPlayback(enabled: Boolean) =
+        edit { it[KEY_BACKGROUND_PLAYBACK] = enabled }
 
     suspend fun setLastEngineUpdate(timestamp: Long) = edit { it[KEY_LAST_UPDATE] = timestamp }
 
@@ -72,6 +78,7 @@ class SettingsRepository(private val context: Context) {
         val KEY_LANGUAGE = stringPreferencesKey("language")
         val KEY_FONT = stringPreferencesKey("font")
         val KEY_AUTO_UPDATE = booleanPreferencesKey("auto_update")
+        val KEY_BACKGROUND_PLAYBACK = booleanPreferencesKey("background_playback")
         val KEY_LAST_UPDATE = longPreferencesKey("last_engine_update")
         val KEY_HAS_COOKIES = booleanPreferencesKey("has_cookies")
     }

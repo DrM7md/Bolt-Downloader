@@ -110,7 +110,6 @@
     <string name="idle_hint">Start by pasting a link</string>
     <string name="font">Font</string>
     <string name="playlist">Playlist</string>
-    <string name="playlist_count">%1$d videos</string>
     <string name="select_all">Select all</string>
     <string name="clear_selection">Clear selection</string>
     <string name="download_selected">Download selected (%1$d)</string>
@@ -118,6 +117,33 @@
     <string name="single_video_only">Download this video only</string>
     <string name="quality_cap">Max quality</string>
     <string name="quality_best">Best</string>
-    <string name="playlist_queued">%1$d videos added to the queue</string>
+    <string name="playlist_queued">Added to the queue</string>
     <string name="nothing_selected">Nothing selected</string>
+    <string name="tab_library">Library</string>
+    <string name="library_title">Library</string>
+    <string name="folders">Folders</string>
+    <string name="unsorted">Unsorted</string>
+    <string name="new_folder">New folder</string>
+    <string name="folder_name">Folder name</string>
+    <string name="create">Create</string>
+    <string name="rename">Rename</string>
+    <string name="save">Save</string>
+    <string name="delete_folder">Delete folder</string>
+    <string name="delete_folder_message">Its videos go back to Unsorted; no file is deleted</string>
+    <string name="move_to_folder">Move to folder</string>
+    <string name="no_folder">No folder</string>
+    <string name="folder_empty">This folder is empty</string>
+    <string name="folder_empty_sub">Move videos here from the library</string>
+    <string name="library_empty_title">Your library is empty</string>
+    <string name="library_empty_sub">Downloads show up here to organise into folders</string>
+    <string name="delete_file_too">Also delete the file from the device</string>
+    <string name="playback">Playback</string>
+    <string name="background_playback">Background playback</string>
+    <string name="background_playback_desc">Keep audio playing when you leave the app or lock the screen</string>
+    <string name="moved">Moved</string>
+    <string name="more">More</string>
+    <plurals name="items_count">
+        <item quantity="one">%1$d video</item>
+        <item quantity="other">%1$d videos</item>
+    </plurals>
 </resources>

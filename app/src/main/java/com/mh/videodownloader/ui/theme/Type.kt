@@ -7,6 +7,7 @@ import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontVariation
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextDirection
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.sp
 import com.mh.videodownloader.R
@@ -71,6 +72,14 @@ fun appTypography(font: AppFont): Typography {
         labelSmall = base.labelSmall.with(family, FontWeight.Medium),
     )
 }
+
+/**
+ * For text the user did not write in the app's language — video titles, channel and folder
+ * names. Compose lays text out in the SCREEN's direction unless told otherwise, which turned
+ * "2014 — Year in Search" into "Year in Search — 2014" in the Arabic UI. UI labels keep the
+ * layout direction on purpose: "MP3 للمحدد" must stay RTL even though it starts with Latin.
+ */
+fun TextStyle.forContent(): TextStyle = copy(textDirection = TextDirection.Content)
 
 private fun TextStyle.with(
     family: FontFamily,

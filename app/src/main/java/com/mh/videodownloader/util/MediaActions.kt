@@ -26,15 +26,6 @@ fun shareableUri(context: Context, rawUri: String): Uri {
     )
 }
 
-/** Opens the file in whatever player the user has. Returns false if nothing can handle it. */
-fun openMedia(context: Context, rawUri: String, mimeType: String): Boolean = runCatching {
-    val intent = Intent(Intent.ACTION_VIEW).apply {
-        setDataAndType(shareableUri(context, rawUri), mimeType)
-        addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_ACTIVITY_NEW_TASK)
-    }
-    context.startActivity(intent)
-}.isSuccess
-
 /**
  * Hands the file to the system share sheet. Nothing leaves the device until the user picks a
  * target there — the chooser is the confirmation step.

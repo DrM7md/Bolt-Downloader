@@ -33,6 +33,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -45,6 +46,7 @@ import com.mh.videodownloader.ui.common.GradientButton
 import com.mh.videodownloader.ui.common.SectionTitle
 import com.mh.videodownloader.util.formatDuration
 import com.mh.videodownloader.util.ltr
+import com.mh.videodownloader.ui.theme.forContent
 
 /**
  * The summary and controls for a playlist link. Entries themselves are emitted by the caller as
@@ -85,7 +87,7 @@ fun PlaylistHeader(
                     Column(Modifier.weight(1f)) {
                         Text(
                             text = info.title,
-                            style = MaterialTheme.typography.titleSmall,
+                            style = MaterialTheme.typography.titleSmall.forContent(),
                             maxLines = 2,
                             overflow = TextOverflow.Ellipsis,
                         )
@@ -102,7 +104,7 @@ fun PlaylistHeader(
                 Spacer(Modifier.height(12.dp))
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Chip(
-                        text = stringResource(R.string.playlist_count, info.entries.size),
+                        text = pluralStringResource(R.plurals.items_count, info.entries.size, info.entries.size),
                         icon = Icons.Rounded.VideoLibrary,
                     )
                     Spacer(Modifier.weight(1f))
@@ -211,7 +213,7 @@ fun PlaylistRow(
             Spacer(Modifier.width(10.dp))
             Text(
                 text = entry.title,
-                style = MaterialTheme.typography.bodyMedium,
+                style = MaterialTheme.typography.bodyMedium.forContent(),
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis,
                 modifier = Modifier.weight(1f),

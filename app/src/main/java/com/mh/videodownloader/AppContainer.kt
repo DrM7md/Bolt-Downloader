@@ -3,6 +3,7 @@ package com.mh.videodownloader
 import android.content.Context
 import androidx.room.Room
 import com.mh.videodownloader.data.DownloadQueue
+import com.mh.videodownloader.data.LibraryRepository
 import com.mh.videodownloader.data.MediaRepository
 import com.mh.videodownloader.data.MediaStoreSaver
 import com.mh.videodownloader.data.db.AppDatabase
@@ -28,13 +29,15 @@ class AppContainer(private val context: Context) {
 
     val mediaStoreSaver = MediaStoreSaver(context)
 
+    // No destructive fallback: the schema migrates (see AppDatabase), and silently wiping
+    // someone's library on a failed upgrade is worse than failing loudly.
     val database: AppDatabase by lazy {
-        Room.databaseBuilder(context, AppDatabase::class.java, "downloads.db")
-            .fallbackToDestructiveMigration(dropAllTables = true)
-            .build()
+        Room.databaseBuilder(context, AppDatabase::class.java, "downloads.db").build()
     }
 
     val historyDao by lazy { database.historyDao() }
+
+    val library by lazy { LibraryRepository(context, database) }
 
     val mediaRepository = MediaRepository(engine) { cookiesFile.takeIf { it.exists() } }
 

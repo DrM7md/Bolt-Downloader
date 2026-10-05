@@ -69,6 +69,10 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
         viewModelScope.launch { container.settings.setFont(font) }
     }
 
+    fun setBackgroundPlayback(enabled: Boolean) {
+        viewModelScope.launch { container.settings.setBackgroundPlayback(enabled) }
+    }
+
     fun setAutoUpdate(enabled: Boolean) {
         viewModelScope.launch { container.settings.setAutoUpdate(enabled) }
     }

@@ -56,6 +56,8 @@ data class DownloadTask(
     val speed: String? = null,
     val error: String? = null,
     val savedUri: String? = null,
+    /** Playlist title when queued from a playlist; the finished file is filed under it. */
+    val collection: String? = null,
 )
 
 /** One row of a playlist index, as returned by `--flat-playlist` (no per-video request yet). */

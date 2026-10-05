@@ -24,6 +24,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Cookie
 import androidx.compose.material.icons.rounded.DarkMode
 import androidx.compose.material.icons.rounded.Folder
+import androidx.compose.material.icons.rounded.Headphones
 import androidx.compose.material.icons.rounded.Info
 import androidx.compose.material.icons.rounded.Language
 import androidx.compose.material.icons.rounded.LightMode
@@ -189,6 +190,25 @@ fun SettingsScreen(
                         )
                     }
                 }
+            }
+        }
+
+        Spacer(Modifier.height(22.dp))
+
+        // ---- Playback -------------------------------------------------------------------
+        SectionTitle(
+            text = stringResource(R.string.playback),
+            modifier = Modifier.padding(start = 20.dp, end = 20.dp),
+        )
+        AppCard(modifier = Modifier.padding(horizontal = 16.dp)) {
+            Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)) {
+                SwitchRow(
+                    icon = Icons.Rounded.Headphones,
+                    title = stringResource(R.string.background_playback),
+                    subtitle = stringResource(R.string.background_playback_desc),
+                    checked = settings.backgroundPlayback,
+                    onCheckedChange = viewModel::setBackgroundPlayback,
+                )
             }
         }
 

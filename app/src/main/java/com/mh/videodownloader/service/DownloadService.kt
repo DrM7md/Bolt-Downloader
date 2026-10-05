@@ -119,6 +119,7 @@ class DownloadService : Service() {
             val saved = container.mediaStoreSaver.saveToDownloads(file, mime)
             tempDir.deleteRecursively()
 
+            val folderId = task.collection?.let { container.library.playlistFolderId(it) }
             container.historyDao.insert(
                 HistoryEntry(
                     title = task.title,
@@ -133,6 +134,7 @@ class DownloadService : Service() {
                     durationSec = task.durationSec,
                     isAudio = task.selection.isAudio,
                     createdAt = System.currentTimeMillis(),
+                    folderId = folderId,
                 )
             )
 
