@@ -40,15 +40,11 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.mh.videodownloader.R
-import com.mh.videodownloader.data.prefs.LibrarySource
 import com.mh.videodownloader.player.PlayerScreen
 import com.mh.videodownloader.ui.history.HistoryScreen
 import com.mh.videodownloader.ui.history.HistoryViewModel
 import com.mh.videodownloader.ui.home.HomeScreen
 import com.mh.videodownloader.ui.home.HomeViewModel
-import com.mh.videodownloader.ui.library.DeviceLibraryScreen
-import com.mh.videodownloader.ui.library.FolderScreen
-import com.mh.videodownloader.ui.library.FolderViewModel
 import com.mh.videodownloader.ui.library.LibraryScreen
 import com.mh.videodownloader.ui.library.LibraryViewModel
 import com.mh.videodownloader.ui.settings.SettingsScreen
@@ -65,7 +61,6 @@ private enum class Destination(
     SETTINGS("settings", R.string.tab_settings, Icons.Rounded.Settings),
 }
 
-private const val FOLDER_ROUTE = "folder/{${FolderViewModel.ARG_FOLDER_ID}}"
 private const val PLAYER_ROUTE = "player?uri={uri}&title={title}&mime={mime}"
 
 private fun NavHostController.openPlayer(uri: String, title: String, mime: String) =
@@ -123,10 +118,8 @@ fun AppRoot(
                 tonalElevation = 0.dp,
             ) {
                 Destination.entries.forEach { destination ->
-                    val inFolder = currentDestination?.route == FOLDER_ROUTE
                     val selected = currentDestination?.hierarchy
-                        ?.any { it.route == destination.route } == true ||
-                        (destination == Destination.LIBRARY && inFolder)
+                        ?.any { it.route == destination.route } == true
                     NavigationBarItem(
                         selected = selected,
                         onClick = {
@@ -168,39 +161,17 @@ fun AppRoot(
                 )
             }
             composable(Destination.LIBRARY.route) {
-                if (settings.librarySource == LibrarySource.DEVICE_FOLDER) {
-                    DeviceLibraryScreen(
-                        viewModel = viewModel(),
-                        contentPadding = innerPadding,
-                        onPlay = { uri, title, mime -> navController.openPlayer(uri, title, mime) },
-                    )
-                } else {
-                    LibraryScreen(
-                        viewModel = libraryViewModel,
-                        contentPadding = innerPadding,
-                        onOpenFolder = { id -> navController.navigate("folder/$id") },
-                        onPlay = { e -> navController.openPlayer(e.fileUri, e.title, e.mimeType) },
-                    )
-                }
-            }
-            composable(
-                route = FOLDER_ROUTE,
-                arguments = listOf(
-                    navArgument(FolderViewModel.ARG_FOLDER_ID) { type = NavType.LongType },
-                ),
-            ) {
-                FolderScreen(
-                    viewModel = viewModel(),
+                LibraryScreen(
+                    viewModel = libraryViewModel,
                     contentPadding = innerPadding,
-                    onBack = { navController.popBackStack() },
-                    onPlay = { e -> navController.openPlayer(e.fileUri, e.title, e.mimeType) },
+                    onPlay = { uri, title, mime -> navController.openPlayer(uri, title, mime) },
                 )
             }
             composable(Destination.HISTORY.route) {
                 HistoryScreen(
                     viewModel = historyViewModel,
                     contentPadding = innerPadding,
-                    onPlay = { e -> navController.openPlayer(e.fileUri, e.title, e.mimeType) },
+                    onPlay = { uri, title, mime -> navController.openPlayer(uri, title, mime) },
                 )
             }
             composable(Destination.SETTINGS.route) {

@@ -112,13 +112,12 @@ class YtDlpEngine(private val appContext: Context) {
 
     enum class Status { NOT_READY, INITIALIZING, READY, FAILED }
 
-    suspend fun analyze(url: String, cookiesFile: File?): VideoInfo = withContext(Dispatchers.IO) {
+    suspend fun analyze(url: String): VideoInfo = withContext(Dispatchers.IO) {
         val request = YoutubeDLRequest(url).apply {
             addOption("--no-playlist")
             addOption("--no-warnings")
             addOption("--socket-timeout", "20")
             addOption("--retries", "3")
-            applyCommonOptions(cookiesFile)
         }
         runPermits.withPermit { repairingIfBroken { YoutubeDL.getInstance().getInfo(request) } }
     }
@@ -127,14 +126,13 @@ class YtDlpEngine(private val appContext: Context) {
      * Reads a playlist without touching any of its videos: `--flat-playlist` asks the site for the
      * index only, which is one request instead of one per entry.
      */
-    suspend fun analyzePlaylist(url: String, cookiesFile: File?): String = withContext(Dispatchers.IO) {
+    suspend fun analyzePlaylist(url: String): String = withContext(Dispatchers.IO) {
         val request = YoutubeDLRequest(url).apply {
             addOption("--flat-playlist")
             addOption("--dump-single-json")
             addOption("--no-warnings")
             addOption("--socket-timeout", "20")
             addOption("--retries", "3")
-            applyCommonOptions(cookiesFile)
         }
         val response = runPermits.withPermit {
             repairingIfBroken { YoutubeDL.getInstance().execute(request, null, null) }
@@ -151,7 +149,6 @@ class YtDlpEngine(private val appContext: Context) {
         selection: DownloadSelection,
         outputDir: File,
         processId: String,
-        cookiesFile: File?,
         onProgress: (percent: Float, etaSec: Long, line: String) -> Unit,
     ): File = withContext(Dispatchers.IO) {
         outputDir.mkdirs()
@@ -163,7 +160,6 @@ class YtDlpEngine(private val appContext: Context) {
             addOption("--continue")
             addOption("--retries", "5")
             addOption("--socket-timeout", "20")
-            applyCommonOptions(cookiesFile)
 
             when (selection) {
                 is DownloadSelection.Video -> {
@@ -243,15 +239,6 @@ class YtDlpEngine(private val appContext: Context) {
     }
 
     fun version(): String? = runCatching { YoutubeDL.getInstance().version(appContext) }.getOrNull()
-
-    private fun YoutubeDLRequest.applyCommonOptions(cookiesFile: File?) {
-        if (cookiesFile != null && cookiesFile.exists()) {
-            addOption("--cookies", cookiesFile.absolutePath)
-        }
-        // Per-source tweaks would live here. Deliberately empty for now: yt-dlp knows every
-        // site better than we do, and each extra flag is one more thing that can break later.
-        // Cookies above are what Instagram and a locked-down YouTube actually need.
-    }
 
     sealed interface UpdateResult {
         data class Updated(val version: String?) : UpdateResult

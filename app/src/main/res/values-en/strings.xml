@@ -45,8 +45,6 @@
     <string name="history_empty_sub">Everything you download shows up here</string>
     <string name="open">Open</string>
     <string name="delete">Delete</string>
-    <string name="delete_from_history">Remove from history</string>
-    <string name="deleted">Deleted</string>
     <string name="cannot_open_file">Could not open the file</string>
     <string name="clear_history">Clear history</string>
 
@@ -60,29 +58,8 @@
     <string name="language_system">System language</string>
     <string name="language_ar">العربية</string>
     <string name="language_en">English</string>
-
-    <string name="settings_engine">Engine</string>
-    <string name="engine_version">yt-dlp version</string>
-    <string name="engine_version_unknown">Unknown</string>
-    <string name="update_engine">Update engine</string>
-    <string name="updating_engine">Updating…</string>
     <string name="engine_up_to_date">Engine is already up to date</string>
     <string name="engine_updated">Engine updated successfully</string>
-    <string name="engine_update_failed">Update failed: %1$s</string>
-    <string name="auto_update">Weekly auto-update</string>
-    <string name="auto_update_desc">Keeps the app working when sites change</string>
-
-    <string name="settings_advanced">Advanced</string>
-    <string name="cookies_title">Cookies file</string>
-    <string name="cookies_desc">Needed for some protected Instagram / YouTube links</string>
-    <string name="cookies_set">Cookies file is set</string>
-    <string name="cookies_none">No file selected</string>
-    <string name="cookies_import">Import</string>
-    <string name="cookies_remove">Remove</string>
-    <string name="cookies_imported">Cookies file imported</string>
-    <string name="cookies_removed">Cookies file removed</string>
-    <string name="save_location">Save location</string>
-    <string name="save_location_value">Download/VideoDownloader</string>
 
     <string name="settings_about">About</string>
     <string name="about_desc">A personal media downloader built on yt-dlp and ffmpeg. Everything runs on your device: no servers, no accounts, no tracking.</string>
@@ -106,8 +83,6 @@
     <string name="share">Share</string>
     <string name="share_via">Share file via</string>
     <string name="cannot_share">Could not share the file</string>
-    <string name="idle_hint">Start by pasting a link</string>
-    <string name="font">Font</string>
     <string name="playlist">Playlist</string>
     <string name="select_all">Select all</string>
     <string name="clear_selection">Clear selection</string>
@@ -121,38 +96,25 @@
     <string name="tab_library">Library</string>
     <string name="library_title">Library</string>
     <string name="folders">Folders</string>
-    <string name="unsorted">Unsorted</string>
     <string name="new_folder">New folder</string>
     <string name="folder_name">Folder name</string>
     <string name="create">Create</string>
     <string name="rename">Rename</string>
     <string name="save">Save</string>
     <string name="delete_folder">Delete folder</string>
-    <string name="delete_folder_message">Its videos go back to Unsorted; no file is deleted</string>
     <string name="move_to_folder">Move to folder</string>
-    <string name="no_folder">No folder</string>
-    <string name="folder_empty">This folder is empty</string>
-    <string name="folder_empty_sub">Move videos here from the library</string>
-    <string name="library_empty_title">Your library is empty</string>
-    <string name="library_empty_sub">Downloads show up here to organise into folders</string>
-    <string name="delete_file_too">Also delete the file from the device</string>
     <string name="playback">Playback</string>
     <string name="background_playback">Background playback</string>
     <string name="background_playback_desc">Keep audio playing when you leave the app or lock the screen</string>
-    <string name="moved">Moved</string>
     <string name="more">More</string>
     <plurals name="items_count">
         <item quantity="one">%1$d video</item>
         <item quantity="other">%1$d videos</item>
     </plurals>
-    <string name="library_source">Library source</string>
-    <string name="library_source_app">App downloads</string>
-    <string name="library_source_device">Device folder</string>
-    <string name="library_source_device_desc">The library shows every video in the folder you pick</string>
-    <string name="library_folder_none">No folder chosen</string>
-    <string name="choose_folder">Choose folder</string>
-    <string name="change">Change</string>
-    <string name="folder_unreadable">Could not read the folder — pick it again in Settings</string>
+    <plurals name="folders_count">
+        <item quantity="one">%1$d folder</item>
+        <item quantity="other">%1$d folders</item>
+    </plurals>
     <string name="delete_file_title">Delete the file from the device?</string>
     <plurals name="selected_count">
         <item quantity="one">%1$d selected</item>
@@ -160,4 +122,52 @@
     </plurals>
     <string name="drag_to_folder">Drag the selection onto a folder, or tap one</string>
     <string name="hold_to_select">Long-press a video to select several</string>
+    <string name="library_source">What the library shows</string>
+    <string name="library_view_folder">Save folder</string>
+    <string name="library_view_phone">All phone videos</string>
+    <string name="library_view_phone_desc">Every video on the phone, without audio files</string>
+    <string name="save_folder">Save folder</string>
+    <string name="save_folder_desc">Downloads go here, each site in its own folder</string>
+    <string name="save_folder_default">Download/VideoDownloader</string>
+    <string name="change">Change</string>
+    <string name="grant_title">Allow managing the save folder</string>
+    <string name="grant_desc">To create folders and move or delete videos, the app needs your permission once: tap “Use this folder”, then “Allow”.</string>
+    <string name="grant_button">Allow access</string>
+    <string name="phone_permission_title">Allow reading videos</string>
+    <string name="phone_permission_desc">To show every video on the phone, the app needs access to videos.</string>
+    <string name="phone_permission_button">Allow</string>
+    <string name="folder_unreadable">Could not read the folder — pick it again in Settings</string>
+    <string name="folder_empty">This folder is empty</string>
+    <string name="folder_empty_hint">Move videos here, or downloads will arrive on their own</string>
+    <string name="library_empty_title">No videos yet</string>
+    <string name="library_empty_sub">Downloads show up here, sorted by site</string>
+    <string name="up_folder">Parent folder</string>
+    <string name="delete_folder_message">The folder “%1$s” and everything in it will be deleted from the device.</string>
+    <string name="delete_files_title">Delete from the device?</string>
+    <string name="delete_files_message">The file will be permanently deleted from the phone.</string>
+    <string name="rename_file">Rename</string>
+    <string name="move_failed">Some videos could not be moved</string>
+    <string name="info">Info</string>
+    <string name="info_name">Name</string>
+    <string name="info_path">Path</string>
+    <string name="info_size">Size</string>
+    <string name="info_date">Date added</string>
+    <string name="info_duration">Duration</string>
+    <string name="info_resolution">Resolution</string>
+    <string name="info_type">Type</string>
+    <string name="info_source">Source</string>
+    <string name="close">Close</string>
+    <string name="copy_link">Copy link</string>
+    <string name="link_copied">Link copied</string>
+    <string name="history_hint">What you downloaded recently. Clearing it never deletes videos.</string>
+    <string name="clear_history_title">Clear history?</string>
+    <string name="clear_history_message">Your videos stay on the phone and in the library; only this log is cleared.</string>
+    <string name="remove_from_history">Remove from history</string>
+    <string name="file_missing">File not found — it may have been deleted or moved outside the app</string>
+    <string name="paste_and_analyze">Paste the link and analyze it</string>
+    <string name="no_link_in_clipboard">No link on the clipboard</string>
+    <plurals name="files_count">
+        <item quantity="one">%1$d file</item>
+        <item quantity="other">%1$d files</item>
+    </plurals>
 </resources>

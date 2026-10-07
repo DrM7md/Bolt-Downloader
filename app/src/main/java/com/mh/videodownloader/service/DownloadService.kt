@@ -102,7 +102,6 @@ class DownloadService : Service() {
                 selection = task.selection,
                 outputDir = tempDir,
                 processId = task.id,
-                cookiesFile = container.cookiesFile.takeIf { it.exists() },
             ) { percent, eta, line ->
                 onProgressLine(task.id, percent, eta, line)
             }
@@ -116,10 +115,9 @@ class DownloadService : Service() {
             pushProgressNotification(force = true)
 
             val mime = if (task.selection.isAudio) "audio/mpeg" else "video/mp4"
-            val saved = container.mediaStoreSaver.saveToDownloads(file, mime)
+            val saved = container.downloadSaver.save(file, mime, task.folders)
             tempDir.deleteRecursively()
 
-            val folderId = task.collection?.let { container.library.playlistFolderId(it) }
             container.historyDao.insert(
                 HistoryEntry(
                     title = task.title,
@@ -134,7 +132,7 @@ class DownloadService : Service() {
                     durationSec = task.durationSec,
                     isAudio = task.selection.isAudio,
                     createdAt = System.currentTimeMillis(),
-                    folderId = folderId,
+                    filePath = saved.path,
                 )
             )
 

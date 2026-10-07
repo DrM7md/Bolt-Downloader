@@ -3,7 +3,6 @@ package com.mh.videodownloader.ui.library
 import android.content.ClipData
 import android.content.ClipDescription
 import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.draganddrop.dragAndDropSource
 import androidx.compose.foundation.draganddrop.dragAndDropTarget
@@ -20,14 +19,13 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.rounded.PlaylistPlay
+import androidx.compose.material.icons.automirrored.rounded.DriveFileMove
 import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material.icons.rounded.DeleteOutline
 import androidx.compose.material.icons.rounded.DoneAll
-import androidx.compose.material.icons.rounded.DriveFileMove
 import androidx.compose.material.icons.rounded.Folder
-import androidx.compose.material.icons.rounded.FolderOff
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -46,32 +44,33 @@ import androidx.compose.ui.draganddrop.DragAndDropTarget
 import androidx.compose.ui.draganddrop.DragAndDropTransferData
 import androidx.compose.ui.draganddrop.mimeTypes
 import androidx.compose.ui.draganddrop.toAndroidDragEvent
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.mh.videodownloader.R
-import com.mh.videodownloader.data.db.Folder
+import com.mh.videodownloader.data.storage.FolderRef
 import com.mh.videodownloader.ui.theme.forContent
 
-/** Which downloads are ticked. Selection mode is simply "something is selected". */
+/** Which files are ticked, by document id. Selection mode is simply "something is selected". */
 @Stable
-class EntrySelection {
-    var ids by mutableStateOf(emptySet<Long>())
+class FileSelection {
+    var ids by mutableStateOf(emptySet<String>())
         private set
 
     val active: Boolean get() = ids.isNotEmpty()
 
-    fun toggle(id: Long) {
+    fun toggle(id: String) {
         ids = if (id in ids) ids - id else ids + id
     }
 
-    fun start(id: Long) {
+    fun start(id: String) {
         ids = setOf(id)
     }
 
-    fun selectAll(all: Collection<Long>) {
+    fun selectAll(all: Collection<String>) {
         ids = all.toSet()
     }
 
@@ -81,9 +80,9 @@ class EntrySelection {
 }
 
 @Composable
-fun rememberEntrySelection() = remember { EntrySelection() }
+fun rememberFileSelection() = remember { FileSelection() }
 
-private const val DRAG_LABEL = "downloads"
+private const val DRAG_LABEL = "videos"
 
 /**
  * Makes a selected card draggable. Holding it picks up the whole selection, not only this card,
@@ -91,28 +90,25 @@ private const val DRAG_LABEL = "downloads"
  * leaves the app — with a plain-text clip because the platform requires one.
  */
 @OptIn(ExperimentalFoundationApi::class)
-fun Modifier.dragSelection(ids: () -> Collection<Long>): Modifier =
+fun Modifier.dragSelection(ids: () -> Collection<String>): Modifier =
     dragAndDropSource { _ ->
         val payload = ids().toList()
         DragAndDropTransferData(
-            clipData = ClipData.newPlainText(DRAG_LABEL, payload.joinToString(",")),
+            clipData = ClipData.newPlainText(DRAG_LABEL, payload.size.toString()),
             localState = payload,
         )
     }
 
 @Suppress("UNCHECKED_CAST")
-private fun DragAndDropEvent.draggedIds(): List<Long>? =
-    toAndroidDragEvent().localState as? List<Long>
+private fun DragAndDropEvent.draggedIds(): List<String>? =
+    toAndroidDragEvent().localState as? List<String>
 
-/**
- * A place selected videos can be dropped on. [folderId] null means "take them out of any
- * folder". [onHover] lets the target light up while something is held over it.
- */
+/** A folder that selected videos can be dropped on; [onHover] lights it up while held over. */
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun Modifier.folderDropTarget(
-    folderId: Long?,
-    onDrop: (ids: List<Long>, folderId: Long?) -> Unit,
+    folderId: String,
+    onDrop: (ids: List<String>, folderId: String) -> Unit,
     onHover: (Boolean) -> Unit,
 ): Modifier {
     val target = remember(folderId, onDrop) {
@@ -172,7 +168,7 @@ fun SelectionBar(
                 modifier = Modifier.weight(1f),
             )
             BarAction(Icons.Rounded.DoneAll, stringResource(R.string.select_all), onSelectAll)
-            BarAction(Icons.Rounded.DriveFileMove, stringResource(R.string.move_to_folder), onMove)
+            BarAction(Icons.AutoMirrored.Rounded.DriveFileMove, stringResource(R.string.move_to_folder), onMove)
             BarAction(
                 Icons.Rounded.DeleteOutline,
                 stringResource(R.string.delete),
@@ -188,7 +184,7 @@ private fun BarAction(
     icon: ImageVector,
     description: String,
     onClick: () -> Unit,
-    tint: androidx.compose.ui.graphics.Color = MaterialTheme.colorScheme.onPrimaryContainer,
+    tint: Color = MaterialTheme.colorScheme.onPrimaryContainer,
 ) {
     IconButton(onClick = onClick) {
         Icon(icon, contentDescription = description, tint = tint)
@@ -197,14 +193,14 @@ private fun BarAction(
 
 /**
  * Shown at the bottom while selecting: every folder as a chip you can drop the selection on —
- * or simply tap. It stays on screen for the whole selection (not just during a drag) because a
- * drop target that appears mid-drag never hears about the drag that is already under way.
+ * or simply tap. It stays up for the whole selection (not just during a drag) because a drop
+ * target that appears mid-drag never hears about the drag that is already under way.
  */
 @Composable
 fun FolderDropTray(
-    folders: List<Folder>,
-    onMove: (ids: List<Long>, folderId: Long?) -> Unit,
-    onTap: (folderId: Long?) -> Unit,
+    folders: List<FolderRef>,
+    onMove: (ids: List<String>, folderId: String) -> Unit,
+    onTap: (folderId: String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Surface(
@@ -225,21 +221,10 @@ fun FolderDropTray(
                 contentPadding = PaddingValues(horizontal = 12.dp),
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
             ) {
-                item(key = "none") {
+                items(folders, key = { it.docId }) { folder ->
                     DropChip(
-                        icon = Icons.Rounded.FolderOff,
-                        label = stringResource(R.string.no_folder),
-                        folderId = null,
-                        onMove = onMove,
-                        onTap = onTap,
-                    )
-                }
-                items(folders, key = { it.id }) { folder ->
-                    DropChip(
-                        icon = if (folder.isPlaylist) Icons.AutoMirrored.Rounded.PlaylistPlay
-                        else Icons.Rounded.Folder,
-                        label = folder.name,
-                        folderId = folder.id,
+                        label = folder.trail.ifEmpty { folder.name },
+                        folderId = folder.docId,
                         onMove = onMove,
                         onTap = onTap,
                     )
@@ -251,11 +236,10 @@ fun FolderDropTray(
 
 @Composable
 private fun DropChip(
-    icon: ImageVector,
     label: String,
-    folderId: Long?,
-    onMove: (ids: List<Long>, folderId: Long?) -> Unit,
-    onTap: (folderId: Long?) -> Unit,
+    folderId: String,
+    onMove: (ids: List<String>, folderId: String) -> Unit,
+    onTap: (folderId: String) -> Unit,
 ) {
     var hovered by remember { mutableStateOf(false) }
     val scheme = MaterialTheme.colorScheme
@@ -276,7 +260,7 @@ private fun DropChip(
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Icon(
-                icon,
+                Icons.Rounded.Folder,
                 contentDescription = null,
                 tint = if (hovered) scheme.onPrimary else scheme.primary,
                 modifier = Modifier.size(18.dp),
@@ -294,6 +278,5 @@ private fun DropChip(
 }
 
 /** Outline that marks a folder card as the current drop spot. */
-fun Modifier.dropHighlight(active: Boolean, color: androidx.compose.ui.graphics.Color): Modifier =
-    if (active) border(2.dp, color, androidx.compose.foundation.shape.RoundedCornerShape(24.dp))
-    else this
+fun Modifier.dropHighlight(active: Boolean, color: Color): Modifier =
+    if (active) border(2.dp, color, RoundedCornerShape(24.dp)) else this

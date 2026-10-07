@@ -109,6 +109,17 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
         onUrlChanged(SourceDetector.firstUrlIn(raw) ?: raw)
     }
 
+    /** The big paste button: paste whatever link is on the clipboard and analyse it at once. */
+    fun pasteAndAnalyze(text: String?) {
+        val link = SourceDetector.firstUrlIn(text)
+        if (link == null) {
+            _message.value = R.string.no_link_in_clipboard
+            return
+        }
+        onUrlChanged(link)
+        analyze()
+    }
+
     fun clearUrl() {
         onUrlChanged("")
     }
@@ -207,6 +218,7 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
             selection = selection,
             durationSec = info.durationSec,
             uploader = info.uploader,
+            folders = listOf(info.source.folderName(info.extractorKey, info.originalUrl)),
         )
         DownloadService.enqueue(context, task)
         _message.value = R.string.download_started
@@ -286,7 +298,11 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
                 selection = selection,
                 durationSec = entry.durationSec,
                 uploader = state.info.uploader,
-                collection = state.info.title,
+                // e.g. YouTube / <playlist title>: the playlist gets its own folder.
+                folders = listOf(
+                    state.info.source.folderName(null, state.info.originalUrl),
+                    state.info.title,
+                ),
             )
         }
         DownloadService.enqueueAll(context, tasks)

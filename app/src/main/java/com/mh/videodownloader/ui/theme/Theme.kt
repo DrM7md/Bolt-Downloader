@@ -7,14 +7,12 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Shapes
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.unit.dp
 import androidx.core.view.WindowCompat
-import com.mh.videodownloader.data.prefs.AppFont
 import com.mh.videodownloader.data.prefs.ThemeMode
 
 val AppShapes = Shapes(
@@ -31,7 +29,6 @@ val LocalIsDarkTheme = staticCompositionLocalOf { false }
 @Composable
 fun VideoDownloaderTheme(
     themeMode: ThemeMode = ThemeMode.SYSTEM,
-    font: AppFont = AppFont.CAIRO,
     content: @Composable () -> Unit,
 ) {
     val dark = when (themeMode) {
@@ -56,7 +53,7 @@ fun VideoDownloaderTheme(
     androidx.compose.runtime.CompositionLocalProvider(LocalIsDarkTheme provides dark) {
         MaterialTheme(
             colorScheme = colorScheme,
-            typography = remember(font) { appTypography(font) },
+            typography = AppTypography,
             shapes = AppShapes,
             content = content,
         )

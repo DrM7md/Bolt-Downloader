@@ -51,8 +51,6 @@
     <string name="history_empty_sub">كل ملف تحمله سيظهر هنا</string>
     <string name="open">فتح</string>
     <string name="delete">حذف</string>
-    <string name="delete_from_history">حذف من السجل</string>
-    <string name="deleted">تم الحذف</string>
     <string name="cannot_open_file">تعذر فتح الملف</string>
     <string name="clear_history">مسح السجل</string>
 
@@ -67,29 +65,8 @@
     <string name="language_system">لغة النظام</string>
     <string name="language_ar">العربية</string>
     <string name="language_en">English</string>
-
-    <string name="settings_engine">المحرك</string>
-    <string name="engine_version">إصدار yt-dlp</string>
-    <string name="engine_version_unknown">غير معروف</string>
-    <string name="update_engine">تحديث المحرك</string>
-    <string name="updating_engine">جار التحديث…</string>
     <string name="engine_up_to_date">المحرك محدث بالفعل</string>
     <string name="engine_updated">تم تحديث المحرك بنجاح</string>
-    <string name="engine_update_failed">فشل التحديث: %1$s</string>
-    <string name="auto_update">التحديث التلقائي الأسبوعي</string>
-    <string name="auto_update_desc">يبقي التطبيق يعمل عندما تتغير المواقع</string>
-
-    <string name="settings_advanced">متقدم</string>
-    <string name="cookies_title">ملف الكوكيز</string>
-    <string name="cookies_desc">لازم لبعض روابط إنستغرام ويوتيوب المحمية</string>
-    <string name="cookies_set">تم تعيين ملف كوكيز</string>
-    <string name="cookies_none">لم يتم تعيين ملف</string>
-    <string name="cookies_import">استيراد</string>
-    <string name="cookies_remove">إزالة</string>
-    <string name="cookies_imported">تم استيراد ملف الكوكيز</string>
-    <string name="cookies_removed">تمت إزالة ملف الكوكيز</string>
-    <string name="save_location">مكان الحفظ</string>
-    <string name="save_location_value">Download/VideoDownloader</string>
 
     <string name="settings_about">عن التطبيق</string>
     <string name="about_desc">تطبيق شخصي لتحميل الوسائط، مبني على yt-dlp وffmpeg. كل شيء يجري على جهازك: لا خوادم، لا حسابات، لا تتبع.</string>
@@ -116,8 +93,6 @@
     <string name="share">مشاركة</string>
     <string name="share_via">مشاركة الملف عبر</string>
     <string name="cannot_share">تعذرت مشاركة الملف</string>
-    <string name="idle_hint">ابدأ بلصق الرابط</string>
-    <string name="font">نوع الخط</string>
     <string name="playlist">قائمة تشغيل</string>
     <string name="select_all">تحديد الكل</string>
     <string name="clear_selection">إلغاء التحديد</string>
@@ -131,25 +106,16 @@
     <string name="tab_library">المكتبة</string>
     <string name="library_title">المكتبة</string>
     <string name="folders">المجلدات</string>
-    <string name="unsorted">غير مصنف</string>
     <string name="new_folder">مجلد جديد</string>
     <string name="folder_name">اسم المجلد</string>
     <string name="create">إنشاء</string>
     <string name="rename">إعادة تسمية</string>
     <string name="save">حفظ</string>
     <string name="delete_folder">حذف المجلد</string>
-    <string name="delete_folder_message">ستعود مقاطعه إلى «غير مصنف» ولن يحذف أي ملف</string>
     <string name="move_to_folder">نقل إلى مجلد</string>
-    <string name="no_folder">بدون مجلد</string>
-    <string name="folder_empty">المجلد فارغ</string>
-    <string name="folder_empty_sub">انقل إليه مقاطع من المكتبة</string>
-    <string name="library_empty_title">المكتبة فارغة</string>
-    <string name="library_empty_sub">ما تحمله يظهر هنا لتنظمه في مجلدات</string>
-    <string name="delete_file_too">حذف الملف من الجهاز أيضا</string>
     <string name="playback">التشغيل</string>
     <string name="background_playback">التشغيل في الخلفية</string>
     <string name="background_playback_desc">يستمر الصوت عند الخروج من التطبيق أو إطفاء الشاشة</string>
-    <string name="moved">تم النقل</string>
     <string name="more">المزيد</string>
     <plurals name="items_count">
         <item quantity="zero">لا مقاطع</item>
@@ -159,14 +125,14 @@
         <item quantity="many">%1$d مقطعا</item>
         <item quantity="other">%1$d مقطع</item>
     </plurals>
-    <string name="library_source">مصدر المكتبة</string>
-    <string name="library_source_app">تحميلات التطبيق</string>
-    <string name="library_source_device">مجلد من الجهاز</string>
-    <string name="library_source_device_desc">تعرض المكتبة كل الفيديوهات في المجلد الذي تختاره</string>
-    <string name="library_folder_none">لم يتم اختيار مجلد</string>
-    <string name="choose_folder">اختيار مجلد</string>
-    <string name="change">تغيير</string>
-    <string name="folder_unreadable">تعذرت قراءة المجلد — اختره من جديد من الإعدادات</string>
+    <plurals name="folders_count">
+        <item quantity="zero">لا مجلدات</item>
+        <item quantity="one">مجلد واحد</item>
+        <item quantity="two">مجلدان</item>
+        <item quantity="few">%1$d مجلدات</item>
+        <item quantity="many">%1$d مجلدا</item>
+        <item quantity="other">%1$d مجلد</item>
+    </plurals>
     <string name="delete_file_title">حذف الملف من الجهاز؟</string>
     <plurals name="selected_count">
         <item quantity="zero">لا شيء محدد</item>
@@ -178,4 +144,56 @@
     </plurals>
     <string name="drag_to_folder">اسحب المحدد إلى مجلد أو اضغط عليه</string>
     <string name="hold_to_select">اضغط مطولا على مقطع لتحديد أكثر من واحد</string>
+    <string name="library_source">ماذا تعرض المكتبة</string>
+    <string name="library_view_folder">مجلد الحفظ</string>
+    <string name="library_view_phone">كل فيديوهات الجوال</string>
+    <string name="library_view_phone_desc">عرض كل مقاطع الفيديو في الجوال، بدون ملفات الصوت</string>
+    <string name="save_folder">مجلد الحفظ</string>
+    <string name="save_folder_desc">تحفظ التحميلات هنا، كل موقع في مجلد خاص به</string>
+    <string name="save_folder_default">Download/VideoDownloader</string>
+    <string name="change">تغيير</string>
+    <string name="grant_title">اسمح بإدارة مجلد الحفظ</string>
+    <string name="grant_desc">لإنشاء المجلدات ونقل المقاطع وحذفها، يحتاج التطبيق إذنك مرة واحدة: اضغط «استخدام هذا المجلد» ثم «سماح».</string>
+    <string name="grant_button">السماح بالوصول</string>
+    <string name="phone_permission_title">اسمح بقراءة الفيديوهات</string>
+    <string name="phone_permission_desc">لعرض كل فيديوهات الجوال يحتاج التطبيق إذن الوصول إلى الفيديو.</string>
+    <string name="phone_permission_button">السماح</string>
+    <string name="folder_unreadable">تعذرت قراءة المجلد — اختره من جديد من الإعدادات</string>
+    <string name="folder_empty">المجلد فارغ</string>
+    <string name="folder_empty_hint">انقل إليه مقاطع، أو ستصله التحميلات تلقائيا</string>
+    <string name="library_empty_title">لا توجد مقاطع بعد</string>
+    <string name="library_empty_sub">ما تحمله يظهر هنا مرتبا حسب الموقع</string>
+    <string name="up_folder">المجلد الأعلى</string>
+    <string name="delete_folder_message">سيحذف المجلد «%1$s» وكل ما فيه من الجهاز نهائيا.</string>
+    <string name="delete_files_title">حذف من الجهاز؟</string>
+    <string name="delete_files_message">سيحذف الملف نهائيا من الجوال.</string>
+    <string name="rename_file">إعادة تسمية</string>
+    <string name="move_failed">تعذر نقل بعض المقاطع</string>
+    <string name="info">معلومات</string>
+    <string name="info_name">الاسم</string>
+    <string name="info_path">المسار</string>
+    <string name="info_size">الحجم</string>
+    <string name="info_date">تاريخ الإضافة</string>
+    <string name="info_duration">المدة</string>
+    <string name="info_resolution">الدقة</string>
+    <string name="info_type">النوع</string>
+    <string name="info_source">المصدر</string>
+    <string name="close">إغلاق</string>
+    <string name="copy_link">نسخ الرابط</string>
+    <string name="link_copied">تم نسخ الرابط</string>
+    <string name="history_hint">ما حملته مؤخرا. مسح السجل لا يحذف المقاطع.</string>
+    <string name="clear_history_title">مسح السجل؟</string>
+    <string name="clear_history_message">ستبقى المقاطع في جوالك وفي المكتبة؛ يمسح فقط هذا السجل.</string>
+    <string name="remove_from_history">إزالة من السجل</string>
+    <string name="file_missing">الملف غير موجود — ربما حذف أو نقل خارج التطبيق</string>
+    <string name="paste_and_analyze">لصق الرابط وتحليله</string>
+    <string name="no_link_in_clipboard">لا يوجد رابط في الحافظة</string>
+    <plurals name="files_count">
+        <item quantity="zero">لا ملفات</item>
+        <item quantity="one">ملف واحد</item>
+        <item quantity="two">ملفان</item>
+        <item quantity="few">%1$d ملفات</item>
+        <item quantity="many">%1$d ملفا</item>
+        <item quantity="other">%1$d ملف</item>
+    </plurals>
 </resources>

@@ -1,5 +1,7 @@
 package com.mh.videodownloader.ui.settings
 
+import android.Manifest
+import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
@@ -21,18 +23,14 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.Cookie
 import androidx.compose.material.icons.rounded.DarkMode
 import androidx.compose.material.icons.rounded.Folder
 import androidx.compose.material.icons.rounded.Headphones
 import androidx.compose.material.icons.rounded.Info
 import androidx.compose.material.icons.rounded.Language
 import androidx.compose.material.icons.rounded.LightMode
-import androidx.compose.material.icons.rounded.Memory
 import androidx.compose.material.icons.rounded.PhoneAndroid
-import androidx.compose.material.icons.rounded.TextFields
-import androidx.compose.material.icons.rounded.Update
-import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material.icons.rounded.VideoLibrary
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.HorizontalDivider
@@ -42,27 +40,24 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.material.icons.rounded.VideoLibrary
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.mh.videodownloader.BuildConfig
 import com.mh.videodownloader.R
-import com.mh.videodownloader.data.prefs.AppFont
 import com.mh.videodownloader.data.prefs.AppLanguage
+import com.mh.videodownloader.data.prefs.LibrarySource
 import com.mh.videodownloader.data.prefs.ThemeMode
+import com.mh.videodownloader.data.storage.FolderStore
 import com.mh.videodownloader.ui.common.AppCard
 import com.mh.videodownloader.ui.common.SectionTitle
-import com.mh.videodownloader.ui.theme.forContent
-import com.mh.videodownloader.data.prefs.LibrarySource
-import com.mh.videodownloader.ui.theme.fontFamilyOf
 import com.mh.videodownloader.util.ltr
 
 @Composable
@@ -72,19 +67,16 @@ fun SettingsScreen(
     modifier: Modifier = Modifier,
 ) {
     val settings by viewModel.settings.collectAsStateWithLifecycle()
-    val engineVersion by viewModel.engineVersion.collectAsStateWithLifecycle()
-    val updating by viewModel.isUpdating.collectAsStateWithLifecycle()
-    val folderName by viewModel.folderName.collectAsStateWithLifecycle()
+    val savePath by viewModel.saveFolderPath.collectAsStateWithLifecycle()
 
-    LaunchedEffect(settings.libraryFolder) { viewModel.refreshFolderName(settings.libraryFolder) }
+    LaunchedEffect(settings.saveFolder) { viewModel.refreshSaveFolder(settings.saveFolder) }
 
-    val folderPicker = rememberLauncherForActivityResult(
-        ActivityResultContracts.OpenDocumentTree()
-    ) { uri -> uri?.let(viewModel::onFolderPicked) }
-
-    val cookiePicker = rememberLauncherForActivityResult(
-        ActivityResultContracts.OpenDocument()
-    ) { uri -> uri?.let(viewModel::importCookies) }
+    val folderPicker = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocumentTree()) { uri ->
+        uri?.let(viewModel::onSaveFolderPicked)
+    }
+    // Switching the library to "all phone videos" asks for video access right there, where the
+    // reason is obvious. Declining keeps the choice; the library offers the button again.
+    val videoPermission = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { }
 
     Column(
         modifier = modifier
@@ -101,312 +93,110 @@ fun SettingsScreen(
         )
 
         // ---- Appearance -----------------------------------------------------------------
-        SectionTitle(
-            text = stringResource(R.string.settings_appearance),
-            modifier = Modifier.padding(start = 20.dp, end = 20.dp),
-        )
-        AppCard(modifier = Modifier.padding(horizontal = 16.dp)) {
-            Column(modifier = Modifier.padding(16.dp)) {
-                Text(
-                    text = stringResource(R.string.theme_mode),
-                    style = MaterialTheme.typography.titleSmall,
-                )
-                Spacer(Modifier.height(10.dp))
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    ThemeChip(
-                        label = stringResource(R.string.theme_system),
-                        icon = Icons.Rounded.PhoneAndroid,
-                        selected = settings.themeMode == ThemeMode.SYSTEM,
-                        onClick = { viewModel.setThemeMode(ThemeMode.SYSTEM) },
-                    )
-                    ThemeChip(
-                        label = stringResource(R.string.theme_light),
-                        icon = Icons.Rounded.LightMode,
-                        selected = settings.themeMode == ThemeMode.LIGHT,
-                        onClick = { viewModel.setThemeMode(ThemeMode.LIGHT) },
-                    )
-                    ThemeChip(
-                        label = stringResource(R.string.theme_dark),
-                        icon = Icons.Rounded.DarkMode,
-                        selected = settings.themeMode == ThemeMode.DARK,
-                        onClick = { viewModel.setThemeMode(ThemeMode.DARK) },
-                    )
+        Section(stringResource(R.string.settings_appearance)) {
+            Text(stringResource(R.string.theme_mode), style = MaterialTheme.typography.titleSmall)
+            Spacer(Modifier.height(10.dp))
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Choice(stringResource(R.string.theme_system), Icons.Rounded.PhoneAndroid, settings.themeMode == ThemeMode.SYSTEM) {
+                    viewModel.setThemeMode(ThemeMode.SYSTEM)
                 }
+                Choice(stringResource(R.string.theme_light), Icons.Rounded.LightMode, settings.themeMode == ThemeMode.LIGHT) {
+                    viewModel.setThemeMode(ThemeMode.LIGHT)
+                }
+                Choice(stringResource(R.string.theme_dark), Icons.Rounded.DarkMode, settings.themeMode == ThemeMode.DARK) {
+                    viewModel.setThemeMode(ThemeMode.DARK)
+                }
+            }
+            Divider()
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                IconBubble(Icons.Rounded.Language)
+                Spacer(Modifier.width(12.dp))
+                Text(stringResource(R.string.language), style = MaterialTheme.typography.titleSmall)
+            }
+            Spacer(Modifier.height(10.dp))
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Choice(stringResource(R.string.language_system), null, settings.language == AppLanguage.SYSTEM) {
+                    viewModel.setLanguage(AppLanguage.SYSTEM)
+                }
+                Choice(stringResource(R.string.language_ar), null, settings.language == AppLanguage.ARABIC) {
+                    viewModel.setLanguage(AppLanguage.ARABIC)
+                }
+                Choice(stringResource(R.string.language_en), null, settings.language == AppLanguage.ENGLISH) {
+                    viewModel.setLanguage(AppLanguage.ENGLISH)
+                }
+            }
+        }
 
-                Spacer(Modifier.height(6.dp))
-                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
-                Spacer(Modifier.height(12.dp))
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    IconBubble(Icons.Rounded.Language)
-                    Spacer(Modifier.width(12.dp))
-                    Text(
-                        text = stringResource(R.string.language),
-                        style = MaterialTheme.typography.titleSmall,
-                    )
-                }
-                Spacer(Modifier.height(10.dp))
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    ThemeChip(
-                        label = stringResource(R.string.language_system),
-                        icon = null,
-                        selected = settings.language == AppLanguage.SYSTEM,
-                        onClick = { viewModel.setLanguage(AppLanguage.SYSTEM) },
-                    )
-                    ThemeChip(
-                        label = stringResource(R.string.language_ar),
-                        icon = null,
-                        selected = settings.language == AppLanguage.ARABIC,
-                        onClick = { viewModel.setLanguage(AppLanguage.ARABIC) },
-                    )
-                    ThemeChip(
-                        label = stringResource(R.string.language_en),
-                        icon = null,
-                        selected = settings.language == AppLanguage.ENGLISH,
-                        onClick = { viewModel.setLanguage(AppLanguage.ENGLISH) },
-                    )
-                }
-
-                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
-                Spacer(Modifier.height(12.dp))
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    IconBubble(Icons.Rounded.TextFields)
-                    Spacer(Modifier.width(12.dp))
-                    Text(
-                        text = stringResource(R.string.font),
-                        style = MaterialTheme.typography.titleSmall,
-                    )
-                }
-                Spacer(Modifier.height(10.dp))
-                // Each chip is set in the face it selects, so the choice is visible rather than
-                // a list of names you have to try one by one.
-                FlowRow(
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp),
+        // ---- Library ----------------------------------------------------------------------
+        Section(stringResource(R.string.tab_library)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                IconBubble(Icons.Rounded.VideoLibrary)
+                Spacer(Modifier.width(12.dp))
+                Text(stringResource(R.string.library_source), style = MaterialTheme.typography.titleSmall)
+            }
+            Spacer(Modifier.height(10.dp))
+            FlowRow(
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                Choice(
+                    stringResource(R.string.library_view_folder),
+                    null,
+                    settings.librarySource == LibrarySource.SAVE_FOLDER,
+                ) { viewModel.setLibrarySource(LibrarySource.SAVE_FOLDER) }
+                Choice(
+                    stringResource(R.string.library_view_phone),
+                    null,
+                    settings.librarySource == LibrarySource.ALL_PHONE_VIDEOS,
                 ) {
-                    AppFont.entries.forEach { font ->
-                        FilterChip(
-                            selected = settings.font == font,
-                            onClick = { viewModel.setFont(font) },
-                            label = {
-                                Text(
-                                    text = font.sample,
-                                    fontFamily = fontFamilyOf(font),
-                                    style = MaterialTheme.typography.labelLarge,
-                                )
-                            },
-                            shape = CircleShape,
-                            colors = FilterChipDefaults.filterChipColors(
-                                selectedContainerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.16f),
-                                selectedLabelColor = MaterialTheme.colorScheme.primary,
-                            ),
-                        )
-                    }
+                    viewModel.setLibrarySource(LibrarySource.ALL_PHONE_VIDEOS)
+                    videoPermission.launch(
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) Manifest.permission.READ_MEDIA_VIDEO
+                        else Manifest.permission.READ_EXTERNAL_STORAGE
+                    )
                 }
             }
-        }
-
-        Spacer(Modifier.height(22.dp))
-
-        // ---- Playback -------------------------------------------------------------------
-        SectionTitle(
-            text = stringResource(R.string.playback),
-            modifier = Modifier.padding(start = 20.dp, end = 20.dp),
-        )
-        AppCard(modifier = Modifier.padding(horizontal = 16.dp)) {
-            Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)) {
-                SwitchRow(
-                    icon = Icons.Rounded.Headphones,
-                    title = stringResource(R.string.background_playback),
-                    subtitle = stringResource(R.string.background_playback_desc),
-                    checked = settings.backgroundPlayback,
-                    onCheckedChange = viewModel::setBackgroundPlayback,
-                )
-            }
-        }
-
-        Spacer(Modifier.height(22.dp))
-
-        // ---- Library source -------------------------------------------------------------
-        SectionTitle(
-            text = stringResource(R.string.tab_library),
-            modifier = Modifier.padding(start = 20.dp, end = 20.dp),
-        )
-        AppCard(modifier = Modifier.padding(horizontal = 16.dp)) {
-            Column(modifier = Modifier.padding(16.dp)) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    IconBubble(Icons.Rounded.VideoLibrary)
-                    Spacer(Modifier.width(12.dp))
+            Divider()
+            // The save folder is where downloads go whichever view the library shows.
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                IconBubble(Icons.Rounded.Folder)
+                Spacer(Modifier.width(12.dp))
+                Column(Modifier.weight(1f)) {
+                    Text(stringResource(R.string.save_folder), style = MaterialTheme.typography.titleSmall)
                     Text(
-                        text = stringResource(R.string.library_source),
-                        style = MaterialTheme.typography.titleSmall,
+                        text = ltr(savePath ?: stringResource(R.string.save_folder_default)),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.primary,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                    Text(
+                        text = stringResource(R.string.save_folder_desc),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
-                Spacer(Modifier.height(10.dp))
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    ThemeChip(
-                        label = stringResource(R.string.library_source_app),
-                        icon = null,
-                        selected = settings.librarySource == LibrarySource.APP_DOWNLOADS,
-                        onClick = { viewModel.setLibrarySource(LibrarySource.APP_DOWNLOADS) },
-                    )
-                    ThemeChip(
-                        label = stringResource(R.string.library_source_device),
-                        icon = null,
-                        selected = settings.librarySource == LibrarySource.DEVICE_FOLDER,
-                        onClick = {
-                            // No folder yet: picking one is what choosing this option means.
-                            if (settings.libraryFolder == null) folderPicker.launch(null)
-                            else viewModel.setLibrarySource(LibrarySource.DEVICE_FOLDER)
-                        },
-                    )
-                }
-                if (settings.librarySource == LibrarySource.DEVICE_FOLDER) {
-                    Spacer(Modifier.height(12.dp))
-                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
-                    Spacer(Modifier.height(12.dp))
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        IconBubble(Icons.Rounded.Folder)
-                        Spacer(Modifier.width(12.dp))
-                        Column(Modifier.weight(1f)) {
-                            Text(
-                                text = folderName ?: stringResource(R.string.library_folder_none),
-                                style = MaterialTheme.typography.titleSmall.forContent(),
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis,
-                            )
-                            Text(
-                                text = stringResource(R.string.library_source_device_desc),
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            )
-                        }
-                        TextButton(onClick = { folderPicker.launch(null) }) {
-                            Text(
-                                stringResource(
-                                    if (settings.libraryFolder == null) R.string.choose_folder
-                                    else R.string.change
-                                )
-                            )
-                        }
-                    }
-                }
+                TextButton(onClick = {
+                    viewModel.prepareDefaultFolder()
+                    folderPicker.launch(FolderStore.defaultFolderHint())
+                }) { Text(stringResource(R.string.change)) }
             }
         }
 
-        Spacer(Modifier.height(22.dp))
-
-        // ---- Engine ---------------------------------------------------------------------
-        SectionTitle(
-            text = stringResource(R.string.settings_engine),
-            modifier = Modifier.padding(start = 20.dp, end = 20.dp),
-        )
-        AppCard(modifier = Modifier.padding(horizontal = 16.dp)) {
-            Column(modifier = Modifier.padding(16.dp)) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    IconBubble(Icons.Rounded.Memory)
-                    Spacer(Modifier.width(12.dp))
-                    Column(Modifier.weight(1f)) {
-                        Text(
-                            text = stringResource(R.string.engine_version),
-                            style = MaterialTheme.typography.titleSmall,
-                        )
-                        Text(
-                            text = engineVersion?.let(::ltr) ?: stringResource(R.string.engine_version_unknown),
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
-                    }
-                    if (updating) {
-                        CircularProgressIndicator(
-                            modifier = Modifier.size(22.dp),
-                            strokeWidth = 2.dp,
-                        )
-                    } else {
-                        TextButton(onClick = viewModel::updateEngine) {
-                            Icon(
-                                Icons.Rounded.Update,
-                                contentDescription = null,
-                                modifier = Modifier.size(18.dp),
-                            )
-                            Spacer(Modifier.width(6.dp))
-                            Text(stringResource(R.string.update_engine))
-                        }
-                    }
-                }
-                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
-                SwitchRow(
-                    icon = Icons.Rounded.Update,
-                    title = stringResource(R.string.auto_update),
-                    subtitle = stringResource(R.string.auto_update_desc),
-                    checked = settings.autoUpdateEngine,
-                    onCheckedChange = viewModel::setAutoUpdate,
-                )
-            }
+        // ---- Playback ---------------------------------------------------------------------
+        Section(stringResource(R.string.playback)) {
+            SwitchRow(
+                icon = Icons.Rounded.Headphones,
+                title = stringResource(R.string.background_playback),
+                subtitle = stringResource(R.string.background_playback_desc),
+                checked = settings.backgroundPlayback,
+                onCheckedChange = viewModel::setBackgroundPlayback,
+            )
         }
 
-        Spacer(Modifier.height(22.dp))
-
-        // ---- Advanced -------------------------------------------------------------------
-        SectionTitle(
-            text = stringResource(R.string.settings_advanced),
-            modifier = Modifier.padding(start = 20.dp, end = 20.dp),
-        )
-        AppCard(modifier = Modifier.padding(horizontal = 16.dp)) {
-            Column(modifier = Modifier.padding(16.dp)) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    IconBubble(Icons.Rounded.Cookie)
-                    Spacer(Modifier.width(12.dp))
-                    Column(Modifier.weight(1f)) {
-                        Text(
-                            text = stringResource(R.string.cookies_title),
-                            style = MaterialTheme.typography.titleSmall,
-                        )
-                        Text(
-                            text = if (settings.hasCookies) stringResource(R.string.cookies_set)
-                            else stringResource(R.string.cookies_desc),
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
-                    }
-                    if (settings.hasCookies) {
-                        TextButton(onClick = viewModel::removeCookies) {
-                            Text(stringResource(R.string.cookies_remove))
-                        }
-                    } else {
-                        TextButton(onClick = { cookiePicker.launch(arrayOf("text/*", "*/*")) }) {
-                            Text(stringResource(R.string.cookies_import))
-                        }
-                    }
-                }
-                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
-                Spacer(Modifier.height(12.dp))
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    IconBubble(Icons.Rounded.Folder)
-                    Spacer(Modifier.width(12.dp))
-                    Column {
-                        Text(
-                            text = stringResource(R.string.save_location),
-                            style = MaterialTheme.typography.titleSmall,
-                        )
-                        Text(
-                            text = ltr(stringResource(R.string.save_location_value)),
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
-                    }
-                }
-            }
-        }
-
-        Spacer(Modifier.height(22.dp))
-
-        // ---- About ----------------------------------------------------------------------
-        SectionTitle(
-            text = stringResource(R.string.settings_about),
-            modifier = Modifier.padding(start = 20.dp, end = 20.dp),
-        )
-        AppCard(modifier = Modifier.padding(horizontal = 16.dp), tonal = true) {
-            Row(modifier = Modifier.padding(16.dp)) {
+        // ---- About ------------------------------------------------------------------------
+        Section(stringResource(R.string.settings_about), tonal = true) {
+            Row {
                 IconBubble(Icons.Rounded.Info)
                 Spacer(Modifier.width(12.dp))
                 Column {
@@ -427,21 +217,28 @@ fun SettingsScreen(
 }
 
 @Composable
-private fun ThemeChip(
-    label: String,
-    icon: ImageVector?,
-    selected: Boolean,
-    onClick: () -> Unit,
-) {
+private fun Section(title: String, tonal: Boolean = false, content: @Composable () -> Unit) {
+    SectionTitle(text = title, modifier = Modifier.padding(start = 20.dp, end = 20.dp))
+    AppCard(modifier = Modifier.padding(horizontal = 16.dp), tonal = tonal) {
+        Column(modifier = Modifier.padding(16.dp)) { content() }
+    }
+    Spacer(Modifier.height(22.dp))
+}
+
+@Composable
+private fun Divider() {
+    Spacer(Modifier.height(12.dp))
+    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
+    Spacer(Modifier.height(12.dp))
+}
+
+@Composable
+private fun Choice(label: String, icon: ImageVector?, selected: Boolean, onClick: () -> Unit) {
     FilterChip(
         selected = selected,
         onClick = onClick,
         label = { Text(label, style = MaterialTheme.typography.labelLarge) },
-        leadingIcon = icon?.let {
-            {
-                Icon(it, contentDescription = null, modifier = Modifier.size(18.dp))
-            }
-        },
+        leadingIcon = icon?.let { { Icon(it, contentDescription = null, modifier = Modifier.size(18.dp)) } },
         shape = CircleShape,
         colors = FilterChipDefaults.filterChipColors(
             selectedContainerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.16f),
@@ -460,7 +257,7 @@ private fun SwitchRow(
     onCheckedChange: (Boolean) -> Unit,
 ) {
     Row(
-        modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp),
+        modifier = Modifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         IconBubble(icon)
@@ -486,11 +283,6 @@ private fun IconBubble(icon: ImageVector) {
             .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)),
         contentAlignment = Alignment.Center,
     ) {
-        Icon(
-            icon,
-            contentDescription = null,
-            tint = MaterialTheme.colorScheme.primary,
-            modifier = Modifier.size(20.dp),
-        )
+        Icon(icon, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(20.dp))
     }
 }

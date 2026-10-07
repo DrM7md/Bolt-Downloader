@@ -56,8 +56,11 @@ data class DownloadTask(
     val speed: String? = null,
     val error: String? = null,
     val savedUri: String? = null,
-    /** Playlist title when queued from a playlist; the finished file is filed under it. */
-    val collection: String? = null,
+    /**
+     * Folders below the save folder the file goes into: ["YouTube"] for a single video,
+     * ["YouTube", "<playlist title>"] for a playlist entry. Created on demand.
+     */
+    val folders: List<String> = emptyList(),
 )
 
 /** One row of a playlist index, as returned by `--flat-playlist` (no per-video request yet). */

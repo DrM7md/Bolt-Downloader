@@ -7,7 +7,6 @@ import com.mh.videodownloader.domain.MediaInfo
 import com.mh.videodownloader.domain.PlaylistInfo
 import com.mh.videodownloader.domain.SourceDetector
 import kotlinx.coroutines.CancellationException
-import java.io.File
 
 data class Analysis(
     val info: MediaInfo,
@@ -15,10 +14,7 @@ data class Analysis(
     val audioBytes: Long?,
 )
 
-class MediaRepository(
-    private val engine: YtDlpEngine,
-    private val cookiesProvider: () -> File?,
-) {
+class MediaRepository(private val engine: YtDlpEngine) {
 
     suspend fun analyze(url: String): Result<Analysis> {
         val clean = url.trim()
@@ -28,7 +24,7 @@ class MediaRepository(
         }
         return try {
             engine.ensureInitialized().getOrThrow()
-            val raw = engine.analyze(clean, cookiesProvider())
+            val raw = engine.analyze(clean)
             Result.success(
                 Analysis(
                     info = FormatSelector.toMediaInfo(raw, clean, source),
@@ -50,7 +46,7 @@ class MediaRepository(
         }
         return try {
             engine.ensureInitialized().getOrThrow()
-            val json = engine.analyzePlaylist(clean, cookiesProvider())
+            val json = engine.analyzePlaylist(clean)
             val info = PlaylistParser.parse(json, clean)
             if (info.entries.isEmpty()) {
                 Result.failure(IllegalStateException("playlist has no downloadable entries"))

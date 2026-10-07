@@ -28,7 +28,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.Bolt
 import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material.icons.rounded.ContentPaste
 import androidx.compose.material.icons.rounded.Download
@@ -158,7 +157,9 @@ fun HomeScreen(
         item {
             Box(modifier = Modifier.padding(horizontal = 16.dp).offset(y = (-16).dp)) {
                 when (val current = state) {
-                    HomeUiState.Idle -> IdleHint()
+                    HomeUiState.Idle -> PasteButton(
+                        onPaste = { viewModel.pasteAndAnalyze(clipboard.getText()?.text?.toString()) },
+                    )
                     HomeUiState.Analyzing -> AnalyzingSkeleton()
                     is HomeUiState.Error -> ErrorCard(
                         message = current.message,
@@ -409,31 +410,30 @@ private fun EngineBanner(failed: Boolean, modifier: Modifier = Modifier) {
     }
 }
 
+/**
+ * One big paste button: tap it and the link on the clipboard is pasted and analysed in one go.
+ * Copying a link and opening the app is the common path, so it deserves the biggest target.
+ */
 @Composable
-private fun IdleHint(modifier: Modifier = Modifier) {
-    Column(
-        modifier = modifier.fillMaxWidth().padding(vertical = 28.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
+private fun PasteButton(onPaste: () -> Unit, modifier: Modifier = Modifier) {
+    Box(
+        modifier = modifier.fillMaxWidth().padding(vertical = 36.dp),
+        contentAlignment = Alignment.Center,
     ) {
-        Text(
-            text = stringOf(R.string.idle_hint),
-            style = MaterialTheme.typography.titleMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
-        Spacer(Modifier.height(18.dp))
-        Box(
-            modifier = Modifier
-                .size(84.dp)
-                .clip(CircleShape)
-                .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.10f)),
-            contentAlignment = Alignment.Center,
+        Surface(
+            onClick = onPaste,
+            shape = CircleShape,
+            color = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f),
+            modifier = Modifier.size(104.dp),
         ) {
-            Icon(
-                Icons.Rounded.Bolt,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.size(38.dp),
-            )
+            Box(contentAlignment = Alignment.Center) {
+                Icon(
+                    Icons.Rounded.ContentPaste,
+                    contentDescription = stringOf(R.string.paste_and_analyze),
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(46.dp),
+                )
+            }
         }
     }
 }

@@ -38,6 +38,7 @@ class App : Application(), SingletonImageLoader.Factory {
             // Unpacking python/ffmpeg takes ~10s on first launch only; start it immediately so
             // the user is rarely the one waiting for it.
             container.engine.ensureInitialized()
+            runCatching { container.housekeeping() }
             runCatching { container.autoUpdateEngineIfDue() }
         }
     }

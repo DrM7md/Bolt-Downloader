@@ -25,6 +25,27 @@ enum class Source(
     UNKNOWN(null, R.string.source_unknown);
 
     val isSupported: Boolean get() = this != UNKNOWN
+
+    /**
+     * The folder this source's downloads go into. Plain ASCII names on purpose: "X / Twitter"
+     * would read as a path, and folder names should look the same in every file manager.
+     */
+    fun folderName(extractorKey: String?, url: String): String = when (this) {
+        YOUTUBE -> "YouTube"
+        INSTAGRAM -> "Instagram"
+        TIKTOK -> "TikTok"
+        TWITTER -> "X"
+        FACEBOOK -> "Facebook"
+        else -> extractorKey?.takeIf { it.isNotBlank() && it != "Generic" }
+            ?: hostLabel(url)
+            ?: "Other"
+    }
+
+    private fun hostLabel(url: String): String? {
+        val host = runCatching { Uri.parse(url).host }.getOrNull()?.removePrefix("www.") ?: return null
+        val name = host.split('.').dropLast(1).lastOrNull() ?: return null
+        return name.replaceFirstChar { it.uppercase() }
+    }
 }
 
 object SourceDetector {

@@ -15,31 +15,28 @@ enum class ThemeMode { SYSTEM, LIGHT, DARK }
 
 enum class AppLanguage(val tag: String) { SYSTEM(""), ARABIC("ar"), ENGLISH("en") }
 
-/** Where the Library screen reads from. */
-enum class LibrarySource { APP_DOWNLOADS, DEVICE_FOLDER }
+/** What the Library tab shows. */
+enum class LibrarySource {
+    /** The save folder, as real folders the user can create, delete and move videos between. */
+    SAVE_FOLDER,
 
-/** Bundled UI faces. Each one covers Arabic and Latin so the app never mixes two voices. */
-enum class AppFont(val key: String, val sample: String) {
-    CAIRO("cairo", "كايرو"),
-    TAJAWAL("tajawal", "تجوال"),
-    READEX("readex", "ريدكس"),
-    NOTO_KUFI("noto_kufi", "نوتو كوفي"),
-    ALMARAI("almarai", "المراعي"),
-    SYSTEM("system", "خط النظام"),
+    /** Every video on the phone, read-only browsing through MediaStore. */
+    ALL_PHONE_VIDEOS,
 }
 
 data class AppSettings(
     val themeMode: ThemeMode = ThemeMode.SYSTEM,
     val language: AppLanguage = AppLanguage.SYSTEM,
-    val font: AppFont = AppFont.CAIRO,
-    val autoUpdateEngine: Boolean = true,
     /** Keep audio playing when the app leaves the screen. Off by default. */
     val backgroundPlayback: Boolean = false,
-    val librarySource: LibrarySource = LibrarySource.APP_DOWNLOADS,
-    /** SAF tree URI of the folder picked for [LibrarySource.DEVICE_FOLDER]. */
-    val libraryFolder: String? = null,
+    val librarySource: LibrarySource = LibrarySource.SAVE_FOLDER,
+    /**
+     * SAF tree URI of the save folder. Null means "not granted yet": downloads still land in
+     * Download/VideoDownloader through MediaStore, but the library cannot manage folders until
+     * the user grants access once.
+     */
+    val saveFolder: String? = null,
     val lastEngineUpdate: Long = 0L,
-    val hasCookies: Boolean = false,
 )
 
 private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "settings")
@@ -52,15 +49,12 @@ class SettingsRepository(private val context: Context) {
                 ?: ThemeMode.SYSTEM,
             language = AppLanguage.entries.firstOrNull { it.tag == prefs[KEY_LANGUAGE] }
                 ?: AppLanguage.SYSTEM,
-            font = AppFont.entries.firstOrNull { it.key == prefs[KEY_FONT] } ?: AppFont.CAIRO,
-            autoUpdateEngine = prefs[KEY_AUTO_UPDATE] ?: true,
             backgroundPlayback = prefs[KEY_BACKGROUND_PLAYBACK] ?: false,
             librarySource = prefs[KEY_LIBRARY_SOURCE]
                 ?.let { runCatching { LibrarySource.valueOf(it) }.getOrNull() }
-                ?: LibrarySource.APP_DOWNLOADS,
-            libraryFolder = prefs[KEY_LIBRARY_FOLDER],
+                ?: LibrarySource.SAVE_FOLDER,
+            saveFolder = prefs[KEY_SAVE_FOLDER],
             lastEngineUpdate = prefs[KEY_LAST_UPDATE] ?: 0L,
-            hasCookies = prefs[KEY_HAS_COOKIES] ?: false,
         )
     }
 
@@ -68,24 +62,17 @@ class SettingsRepository(private val context: Context) {
 
     suspend fun setLanguage(language: AppLanguage) = edit { it[KEY_LANGUAGE] = language.tag }
 
-    suspend fun setFont(font: AppFont) = edit { it[KEY_FONT] = font.key }
-
-    suspend fun setAutoUpdate(enabled: Boolean) = edit { it[KEY_AUTO_UPDATE] = enabled }
-
     suspend fun setLibrarySource(source: LibrarySource) =
         edit { it[KEY_LIBRARY_SOURCE] = source.name }
 
-    suspend fun setLibraryFolder(treeUri: String) = edit {
-        it[KEY_LIBRARY_FOLDER] = treeUri
-        it[KEY_LIBRARY_SOURCE] = LibrarySource.DEVICE_FOLDER.name
-    }
+    suspend fun setSaveFolder(treeUri: String) = edit { it[KEY_SAVE_FOLDER] = treeUri }
+
+    suspend fun clearSaveFolder() = edit { it.remove(KEY_SAVE_FOLDER) }
 
     suspend fun setBackgroundPlayback(enabled: Boolean) =
         edit { it[KEY_BACKGROUND_PLAYBACK] = enabled }
 
     suspend fun setLastEngineUpdate(timestamp: Long) = edit { it[KEY_LAST_UPDATE] = timestamp }
-
-    suspend fun setHasCookies(has: Boolean) = edit { it[KEY_HAS_COOKIES] = has }
 
     private suspend fun edit(block: (androidx.datastore.preferences.core.MutablePreferences) -> Unit) {
         context.dataStore.edit(block)
@@ -94,12 +81,11 @@ class SettingsRepository(private val context: Context) {
     private companion object {
         val KEY_THEME = stringPreferencesKey("theme_mode")
         val KEY_LANGUAGE = stringPreferencesKey("language")
-        val KEY_FONT = stringPreferencesKey("font")
-        val KEY_AUTO_UPDATE = booleanPreferencesKey("auto_update")
         val KEY_BACKGROUND_PLAYBACK = booleanPreferencesKey("background_playback")
-        val KEY_LIBRARY_SOURCE = stringPreferencesKey("library_source")
-        val KEY_LIBRARY_FOLDER = stringPreferencesKey("library_folder")
+        // New keys rather than reusing the 2.0 ones: their values meant something else
+        // ("app downloads" / "device folder"), and silently reinterpreting them would surprise.
+        val KEY_LIBRARY_SOURCE = stringPreferencesKey("library_view")
+        val KEY_SAVE_FOLDER = stringPreferencesKey("save_folder")
         val KEY_LAST_UPDATE = longPreferencesKey("last_engine_update")
-        val KEY_HAS_COOKIES = booleanPreferencesKey("has_cookies")
     }
 }

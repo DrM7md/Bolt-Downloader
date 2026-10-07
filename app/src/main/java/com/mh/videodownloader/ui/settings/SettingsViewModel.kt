@@ -3,27 +3,26 @@ package com.mh.videodownloader.ui.settings
 import android.app.Application
 import android.content.Intent
 import android.net.Uri
+import android.os.Environment
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.net.toUri
 import androidx.core.os.LocaleListCompat
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.mh.videodownloader.App
-import com.mh.videodownloader.R
-import com.mh.videodownloader.data.engine.YtDlpEngine
-import com.mh.videodownloader.data.prefs.AppFont
 import com.mh.videodownloader.data.prefs.AppLanguage
 import com.mh.videodownloader.data.prefs.AppSettings
 import com.mh.videodownloader.data.prefs.LibrarySource
 import com.mh.videodownloader.data.prefs.ThemeMode
-import kotlinx.coroutines.Dispatchers
+import com.mh.videodownloader.data.storage.DownloadSaver
+import com.mh.videodownloader.data.storage.storagePath
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
+import java.io.File
 
 class SettingsViewModel(application: Application) : AndroidViewModel(application) {
 
@@ -32,23 +31,19 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
     val settings: StateFlow<AppSettings> = container.settings.settings
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), AppSettings())
 
-    private val _engineVersion = MutableStateFlow<String?>(null)
-    val engineVersion: StateFlow<String?> = _engineVersion.asStateFlow()
-
-    private val _isUpdating = MutableStateFlow(false)
-    val isUpdating: StateFlow<Boolean> = _isUpdating.asStateFlow()
+    /** Readable path of the save folder, e.g. "Download/VideoDownloader". */
+    private val _saveFolderPath = MutableStateFlow<String?>(null)
+    val saveFolderPath: StateFlow<String?> = _saveFolderPath.asStateFlow()
 
     private val _message = MutableStateFlow<Int?>(null)
     val message: StateFlow<Int?> = _message.asStateFlow()
 
-    init {
-        refreshEngineVersion()
-    }
-
-    private fun refreshEngineVersion() {
+    fun refreshSaveFolder(treeUri: String?) {
         viewModelScope.launch {
-            container.engine.ensureInitialized()
-            _engineVersion.value = container.engine.version()
+            val tree = treeUri?.toUri()
+            _saveFolderPath.value = tree
+                ?.takeIf { container.folderStore.displayName(it) != null }
+                ?.let { storagePath(container.folderStore.rootId(it)) }
         }
     }
 
@@ -68,86 +63,38 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
         }
     }
 
-    fun setFont(font: AppFont) {
-        viewModelScope.launch { container.settings.setFont(font) }
-    }
-
-    private val _folderName = MutableStateFlow<String?>(null)
-    /** Display name of the picked device folder, for the settings row. */
-    val folderName: StateFlow<String?> = _folderName.asStateFlow()
-
-    fun refreshFolderName(treeUri: String?) {
-        viewModelScope.launch {
-            _folderName.value = treeUri?.let { container.deviceFolders.displayName(it.toUri()) }
-        }
+    fun setBackgroundPlayback(enabled: Boolean) {
+        viewModelScope.launch { container.settings.setBackgroundPlayback(enabled) }
     }
 
     fun setLibrarySource(source: LibrarySource) {
         viewModelScope.launch { container.settings.setLibrarySource(source) }
     }
 
-    /**
-     * Keeps read/write access to the picked folder across restarts. Without the persistable grant
-     * the permission dies with this process and the library goes blank on next launch.
-     */
-    fun onFolderPicked(uri: Uri) {
-        val app = getApplication<Application>()
+    /** Makes sure the default folder exists so the system picker can open right inside it. */
+    fun prepareDefaultFolder() {
         runCatching {
-            app.contentResolver.takePersistableUriPermission(
+            File(
+                Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS),
+                DownloadSaver.DEFAULT_FOLDER,
+            ).mkdirs()
+        }
+    }
+
+    /**
+     * Keeps read/write access to the picked folder across restarts. Without the persistable
+     * grant the permission dies with this process and saving falls back to the default folder.
+     */
+    fun onSaveFolderPicked(uri: Uri) {
+        val resolver = getApplication<Application>().contentResolver
+        runCatching {
+            resolver.takePersistableUriPermission(
                 uri,
                 Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION,
             )
         }
-        viewModelScope.launch { container.settings.setLibraryFolder(uri.toString()) }
-        refreshFolderName(uri.toString())
-    }
-
-    fun setBackgroundPlayback(enabled: Boolean) {
-        viewModelScope.launch { container.settings.setBackgroundPlayback(enabled) }
-    }
-
-    fun setAutoUpdate(enabled: Boolean) {
-        viewModelScope.launch { container.settings.setAutoUpdate(enabled) }
-    }
-
-    fun updateEngine() {
-        if (_isUpdating.value) return
-        viewModelScope.launch {
-            _isUpdating.value = true
-            val result = container.engine.update()
-            _isUpdating.value = false
-            _message.value = when (result) {
-                is YtDlpEngine.UpdateResult.Updated -> R.string.engine_updated
-                YtDlpEngine.UpdateResult.AlreadyUpToDate -> R.string.engine_up_to_date
-                is YtDlpEngine.UpdateResult.Failed -> R.string.engine_update_failed_short
-            }
-            if (result !is YtDlpEngine.UpdateResult.Failed) {
-                container.settings.setLastEngineUpdate(System.currentTimeMillis())
-            }
-            _engineVersion.value = container.engine.version()
-        }
-    }
-
-    fun importCookies(uri: Uri) {
-        viewModelScope.launch {
-            val ok = withContext(Dispatchers.IO) {
-                runCatching {
-                    getApplication<Application>().contentResolver.openInputStream(uri)?.use { input ->
-                        container.cookiesFile.outputStream().use { output -> input.copyTo(output) }
-                    } ?: error("cannot open cookies file")
-                }.isSuccess
-            }
-            container.settings.setHasCookies(ok && container.cookiesFile.length() > 0)
-            _message.value = if (ok) R.string.cookies_imported else R.string.cannot_open_file
-        }
-    }
-
-    fun removeCookies() {
-        viewModelScope.launch {
-            withContext(Dispatchers.IO) { container.cookiesFile.delete() }
-            container.settings.setHasCookies(false)
-            _message.value = R.string.cookies_removed
-        }
+        viewModelScope.launch { container.settings.setSaveFolder(uri.toString()) }
+        refreshSaveFolder(uri.toString())
     }
 
     fun consumeMessage() {

@@ -47,7 +47,7 @@ class MainActivity : AppCompatActivity() {
             val settings by container.settings.settings
                 .collectAsStateWithLifecycle(initialValue = AppSettings())
 
-            VideoDownloaderTheme(themeMode = settings.themeMode, font = settings.font) {
+            VideoDownloaderTheme(themeMode = settings.themeMode) {
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background,
