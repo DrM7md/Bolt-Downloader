@@ -31,7 +31,7 @@ data class FolderRef(
     val depth: Int,
 )
 
-data class FolderSummary(val itemCount: Int, val folderCount: Int, val cover: Uri?)
+data class FolderSummary(val itemCount: Int, val folderCount: Int, val cover: VideoFrame?)
 
 /**
  * Real folders on the device, read and changed through the Storage Access Framework.
@@ -75,8 +75,9 @@ class FolderStore(private val context: Context) {
         FolderSummary(itemCount = media.size, folderCount = folders.size, cover = cover)
     }
 
-    private fun newestVideo(items: List<StoreItem>): Uri? =
-        items.filter { it.mimeType.startsWith("video/") }.maxByOrNull { it.modifiedAt }?.uri
+    private fun newestVideo(items: List<StoreItem>): VideoFrame? =
+        items.filter { it.mimeType.startsWith("video/") }.maxByOrNull { it.modifiedAt }
+            ?.let { VideoFrame(it.uri, it.modifiedAt) }
 
     /** Every folder under the root, breadth first — the targets offered by "move to". */
     suspend fun allFolders(tree: Uri, maxDepth: Int = 6, limit: Int = 400): List<FolderRef> =

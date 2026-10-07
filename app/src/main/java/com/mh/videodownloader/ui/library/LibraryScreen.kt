@@ -72,14 +72,13 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.compose.AsyncImage
-import coil3.request.ImageRequest
-import coil3.video.videoFramePercent
 import com.mh.videodownloader.R
 import com.mh.videodownloader.data.prefs.LibrarySource
 import com.mh.videodownloader.data.storage.FolderStore
 import com.mh.videodownloader.data.storage.FolderSummary
 import com.mh.videodownloader.data.storage.PhoneVideo
 import com.mh.videodownloader.data.storage.StoreItem
+import com.mh.videodownloader.data.storage.VideoFrame
 import com.mh.videodownloader.ui.common.EmptyState
 import com.mh.videodownloader.ui.common.SectionTitle
 import com.mh.videodownloader.ui.theme.brandGradient
@@ -301,7 +300,7 @@ private fun FolderLibrary(
                         items(current.files, key = { it.docId }) { file ->
                             MediaRow(
                                 id = file.docId,
-                                thumbnail = videoFrame(file.uri),
+                                thumbnail = VideoFrame(file.uri, file.modifiedAt),
                                 title = file.name.substringBeforeLast('.'),
                                 meta = listOfNotNull(formatBytes(file.sizeBytes), formatDate(file.modifiedAt)),
                                 isAudio = file.isAudio,
@@ -448,7 +447,7 @@ private fun FolderCardView(
                 val cover = card.summary.cover
                 if (cover != null) {
                     AsyncImage(
-                        model = videoFrame(cover),
+                        model = cover,
                         contentDescription = null,
                         contentScale = ContentScale.Crop,
                         modifier = Modifier.matchParentSize(),
@@ -603,7 +602,7 @@ private fun PhoneLibrary(
                 items(current.videos, key = { it.uri.toString() }) { video ->
                     MediaRow(
                         id = video.uri.toString(),
-                        thumbnail = videoFrame(video.uri),
+                        thumbnail = VideoFrame(video.uri, video.addedAt),
                         title = video.name.substringBeforeLast('.'),
                         meta = listOfNotNull(
                             formatBytes(video.sizeBytes),
@@ -678,14 +677,6 @@ private fun Loading() {
         CircularProgressIndicator()
     }
 }
-
-/** A frame from 10% into the video — the very first frame is so often a fade from black. */
-@Composable
-private fun videoFrame(uri: android.net.Uri): ImageRequest =
-    ImageRequest.Builder(LocalContext.current)
-        .data(uri)
-        .videoFramePercent(0.1)
-        .build()
 
 /** "3 videos", or "3 videos · 2 folders" when the folder also holds subfolders. */
 @Composable

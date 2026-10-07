@@ -12,6 +12,7 @@ import com.mh.videodownloader.data.storage.DownloadSaver
 import com.mh.videodownloader.data.storage.FileLocator
 import com.mh.videodownloader.data.storage.FolderStore
 import com.mh.videodownloader.data.storage.PhoneMedia
+import com.mh.videodownloader.data.storage.VideoFrameFetcher
 import kotlinx.coroutines.flow.first
 import java.io.File
 import java.util.concurrent.TimeUnit
@@ -69,6 +70,8 @@ class AppContainer(private val context: Context) {
     suspend fun housekeeping() {
         // 2.0 kept an imported cookies file; the feature is gone, so is the file.
         File(context.filesDir, "cookies.txt").delete()
+
+        VideoFrameFetcher.trim(context)
 
         // Log rows written before 3.0 have no path. Fill it in so the log can still find a
         // file after the library moves it.

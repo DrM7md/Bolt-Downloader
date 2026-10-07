@@ -44,7 +44,6 @@ androidx-datastore-preferences = { module = "androidx.datastore:datastore-prefer
 
 coil-compose = { module = "io.coil-kt.coil3:coil-compose", version.ref = "coil" }
 coil-network-okhttp = { module = "io.coil-kt.coil3:coil-network-okhttp", version.ref = "coil" }
-coil-video = { module = "io.coil-kt.coil3:coil-video", version.ref = "coil" }
 
 media3-exoplayer = { module = "androidx.media3:media3-exoplayer", version.ref = "media3" }
 media3-ui = { module = "androidx.media3:media3-ui", version.ref = "media3" }

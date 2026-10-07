@@ -5,7 +5,8 @@ import coil3.ImageLoader
 import coil3.PlatformContext
 import coil3.SingletonImageLoader
 import coil3.request.crossfade
-import coil3.video.VideoFrameDecoder
+import com.mh.videodownloader.data.storage.VideoFrame
+import com.mh.videodownloader.data.storage.VideoFrameFetcher
 import com.mh.videodownloader.service.DownloadNotifier
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -20,12 +21,16 @@ class App : Application(), SingletonImageLoader.Factory {
     private val appScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
 
     /**
-     * One image loader for the whole app. Adds a video-frame decoder so files picked from a
-     * device folder get real thumbnails, and turns off crossfade: images should just appear.
+     * One image loader for the whole app. Local videos get their thumbnails from
+     * [VideoFrameFetcher] (extracted once, cached on disk), and crossfade is off: images
+     * should just appear.
      */
     override fun newImageLoader(context: PlatformContext): ImageLoader =
         ImageLoader.Builder(context)
-            .components { add(VideoFrameDecoder.Factory()) }
+            .components {
+                add(VideoFrameFetcher.Factory(context))
+                add(VideoFrameFetcher.Key(), VideoFrame::class)
+            }
             .crossfade(false)
             .build()
 

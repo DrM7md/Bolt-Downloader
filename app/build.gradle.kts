@@ -72,6 +72,12 @@ android {
         buildConfig = true
     }
 
+    // The app speaks Arabic and English only; drop the other ~80 languages that AndroidX and
+    // Media3 bring along, which would otherwise sit in resources.arsc unused.
+    androidResources {
+        localeFilters += listOf("ar", "en")
+    }
+
     // youtubedl-android ships its python/ffmpeg payload as uncompressed .so files.
     packaging {
         jniLibs { useLegacyPackaging = true }
@@ -117,7 +123,6 @@ dependencies {
 
     implementation(libs.coil.compose)
     implementation(libs.coil.network.okhttp)
-    implementation(libs.coil.video)
 
     implementation(libs.media3.exoplayer)
     implementation(libs.media3.ui)
