@@ -1,8 +1,17 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.ksp)
+}
+
+// Release signing reads its secrets from keystore.properties (git-ignored) so they never reach
+// the repository. Without that file the release build is simply left unsigned.
+val keystoreProps = Properties().apply {
+    val file = rootProject.file("keystore.properties")
+    if (file.exists()) file.inputStream().use { stream -> load(stream) }
 }
 
 android {
@@ -13,8 +22,8 @@ android {
         applicationId = "com.mh.videodownloader"
         minSdk = 26
         targetSdk = 36
-        versionCode = 3
-        versionName = "3.0"
+        versionCode = 4
+        versionName = "3.1"
 
         // arm64 for real devices, x86_64 so the app also runs on the emulator.
         ndk { abiFilters += listOf("arm64-v8a", "x86_64") }
@@ -23,10 +32,10 @@ android {
 
     signingConfigs {
         create("personal") {
-            storeFile = file("personal-release.jks")
-            storePassword = "videodl"
-            keyAlias = "videodl"
-            keyPassword = "videodl"
+            storeFile = keystoreProps.getProperty("storeFile")?.let { path -> rootProject.file(path) }
+            storePassword = keystoreProps.getProperty("storePassword")
+            keyAlias = keystoreProps.getProperty("keyAlias")
+            keyPassword = keystoreProps.getProperty("keyPassword")
         }
     }
 
@@ -40,7 +49,7 @@ android {
             isShrinkResources = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
             // Personal build: signed locally so the APK installs straight from the file manager.
-            if (file("personal-release.jks").exists()) {
+            if (keystoreProps.getProperty("storeFile")?.let { path -> rootProject.file(path).exists() } == true) {
                 signingConfig = signingConfigs.getByName("personal")
             }
         }

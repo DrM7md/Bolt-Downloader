@@ -1,147 +1,135 @@
 <p align="center">
-  <img src="docs/banner.png" alt="مُحمّل الفيديو — Video Downloader" width="820">
+  <img src="docs/banner.png" alt="Bolt Downloader" width="820">
 </p>
 
-# مُحمّل الفيديو — Video Downloader
+<p align="center">
+  <b>Paste a link, get the video.</b><br>
+  A fast, private Android downloader for YouTube, TikTok, Instagram, X and 1000+ other sites.<br>
+  Everything runs on your phone — no servers, no accounts, no tracking.
+</p>
 
-تطبيق أندرويد شخصي لتحميل الوسائط من الروابط، مبني على **yt-dlp** و**ffmpeg** مضمّنين داخل
-التطبيق. كل شيء يجري على الجهاز: لا خوادم، لا حسابات، لا تتبّع.
+<p align="center">
+  <a href="https://github.com/DrM7md/Bolt-Downloader/releases/latest"><img alt="Latest release" src="https://img.shields.io/github/v/release/DrM7md/Bolt-Downloader?style=for-the-badge&color=7C5CFF"></a>
+  <img alt="Android 8.0+" src="https://img.shields.io/badge/Android-8.0%2B-3DDC84?style=for-the-badge&logo=android&logoColor=white">
+  <img alt="Kotlin + Compose" src="https://img.shields.io/badge/Kotlin-Jetpack%20Compose-7F52FF?style=for-the-badge&logo=kotlin&logoColor=white">
+  <a href="LICENSE"><img alt="GPL-3.0" src="https://img.shields.io/badge/License-GPL--3.0-00B4D8?style=for-the-badge"></a>
+</p>
 
-> تطبيق للاستخدام الشخصي — غير موجّه للنشر على Google Play.
+<p align="center">
+  <a href="https://github.com/DrM7md/Bolt-Downloader/releases/latest/download/Bolt-Downloader-arm64.apk"><b>⬇ Download the APK</b></a>
+  &nbsp;·&nbsp; <a href="#-install">Install guide</a>
+  &nbsp;·&nbsp; <a href="#-بالعربي">بالعربي</a>
+</p>
 
 ---
 
-## ما الذي يفعله
+## 📱 Screenshots
 
-- لصق رابط (أو استقباله عبر **المشاركة** من أي تطبيق) ثم تحليله وعرض الصورة المصغرة والعنوان
-  والمدة واسم القناة.
-- قائمة جودات مبنية من الصيغ الحقيقية التي أعادها yt-dlp — حتى 1080p و4K حين تتوفر — مع الحجم
-  التقريبي لكل خيار.
-- **قوائم التشغيل**: رابط قائمة يعرض كل مقاطعها لتختار منها، بجودة قصوى واحدة للكل أو MP3،
-  وتنزل المقاطع في مجلد باسم القائمة داخل مجلد الموقع (`YouTube/<اسم القائمة>/`).
-- تحميل الفيديو أو استخراج **MP3** بجودة 192 kbps مع صورة الغلاف والبيانات الوصفية.
-- التحميل داخل **Foreground Service** مع إشعار يعرض النسبة والسرعة وزر إلغاء.
-- الحفظ في `Download/VideoDownloader/` (أو أي مجلد تختاره من الإعدادات)، وكل موقع في مجلده:
-  `YouTube/`، `Instagram/`، `TikTok/`… يُنشأ تلقائيا عند أول تحميل.
-- **المكتبة = المجلدات الحقيقية على الجهاز**: إنشاء مجلد وإعادة تسميته وحذفه، ونقل أي مقطع أو
-  مجلد إلى أي مجلد — من القائمة ⋮ أو بتحديد عدة مقاطع وسحبها إلى المجلد. كل ما تراه هو ما في
-  مدير الملفات تماما (يحتاج إذنا واحدا لمجلد الحفظ عبر منتقي النظام).
-- وضع بديل للمكتبة يعرض **كل فيديوهات الجوال** (فيديو فقط، بلا ملفات صوت).
-- **معلومات** لكل مقطع: المسار والحجم وتاريخ الإضافة والمدة والدقة والنوع والرابط الأصلي.
-- **مشغل داخلي** (Media3) مع خيار **التشغيل في الخلفية** — مطفأ افتراضيا.
-- **السجل** يحفظ ما حملته مؤخرا؛ مسحه يمسح السجل فقط ولا يلمس الملفات، ويجد المقطع حتى لو نقلته.
-- **تحديث تلقائي لمحرك yt-dlp** كل أسبوع بلا تدخل — وهذا ما يبقي التطبيق حيا عندما تغير المواقع
-  بنيتها.
-- زر **لصق** واحد في الرئيسية يلصق الرابط ويحلله فورا.
-- عربي أولا مع RTL كامل، وإنجليزية، وثيم فاتح/داكن، وخط النظام.
+| Home | Playlists | Library | History | Settings | Dark |
+|:---:|:---:|:---:|:---:|:---:|:---:|
+| <img src="docs/screenshots/home.png" width="150"> | <img src="docs/screenshots/playlist.png" width="150"> | <img src="docs/screenshots/library.png" width="150"> | <img src="docs/screenshots/history.png" width="150"> | <img src="docs/screenshots/settings.png" width="150"> | <img src="docs/screenshots/dark.png" width="150"> |
 
-## لقطات من المنطق المهم
+## ✨ Features
 
-| المشكلة | الحل في الكود |
+**Downloading**
+- **One-tap paste** — the big paste button reads the link and analyzes it immediately. Or just *Share* a link to Bolt from any app.
+- **Real quality list** built from the formats the site actually offers — up to 1080p and 4K — each with its approximate size.
+- **MP3 extraction** at 192 kbps with cover art and metadata.
+- **Whole playlists** — pick the videos you want, set one max quality (or MP3) for all of them.
+- **Background downloads** in a foreground service, with progress, speed and cancel in the notification.
+
+**Organized for you**
+- Every site gets its own folder, created on first use: `YouTube/`, `TikTok/`, `Instagram/`, …
+- Playlists land in their own subfolder: `YouTube/<playlist name>/`.
+- Saves to `Download/VideoDownloader/` by default — or any folder you choose.
+
+**A library that is your real folders**
+- What you see is exactly what's on disk — the same files your file manager shows.
+- Create, rename and delete folders; move any video or folder anywhere — from the ⋮ menu or by **multi-selecting and dragging** onto a folder.
+- Optional mode that shows **every video on the phone** (videos only, no audio clutter).
+- **Info sheet** for any file: path, size, date, duration, resolution, type and the original link.
+
+**History, player & upkeep**
+- History of recent downloads. Clearing it never deletes a file, and it still finds videos you've moved.
+- Built-in player (Media3) with optional background playback.
+- **Self-updating engine** — yt-dlp updates itself weekly, so the app keeps working when sites change.
+
+**Feels right**
+- Arabic-first with full RTL, plus English. Light and dark themes. System font.
+- Small and quick: R8-shrunk, thumbnails cached at display size.
+
+## 📥 Install
+
+1. Download an APK from the [latest release](https://github.com/DrM7md/Bolt-Downloader/releases/latest):
+   - **`Bolt-Downloader-arm64.apk`** — for almost every phone from the last ~8 years. *Pick this one.*
+   - `Bolt-Downloader-universal.apk` — works everywhere (bigger), if the first one won't install.
+2. Open it on your phone and allow *Install unknown apps* for your browser or file manager when asked.
+3. First launch takes ~10 seconds while the engine unpacks — only once.
+
+> Bolt isn't on Google Play: Play doesn't allow apps that download from YouTube.
+
+## 🔒 Privacy
+
+No accounts, no analytics, no ads, no servers of ours. Links are processed by yt-dlp **on your device**; the only network traffic is to the site you're downloading from and to GitHub for the weekly engine update.
+
+## 🛠 Build from source
+
+Requirements: Android Studio (JDK 17+), Android SDK 36.
+
+```bash
+git clone https://github.com/DrM7md/Bolt-Downloader.git
+cd Bolt-Downloader
+./gradlew assembleDebug
+```
+
+For a signed release build, create `keystore.properties` in the project root (it's git-ignored):
+
+```properties
+storeFile=app/your-release.jks
+storePassword=…
+keyAlias=…
+keyPassword=…
+```
+
+then run `./gradlew assembleRelease`. Without that file the release build is produced unsigned.
+
+| Layer | Choice |
 |---|---|
-| YouTube يقدّم الجودات فوق 720p كمسارين منفصلين | `-f bestvideo[...]+bestaudio` + `--merge-output-format mp4` ليدمجهما ffmpeg، وإلا فالنتيجة فيديو صامت |
-| MediaStore على Android 10+ يعمل بـ `Uri` لا بمسارات | التحميل إلى `cacheDir` ثم النقل عبر `contentResolver.openOutputStream` |
-| إلغاء التحليل أثناء تهيئة المحرّك كان يترك ملف yt-dlp ناقصًا | التهيئة تعمل في `CoroutineScope` خاص، والمستدعون ينتظرونها فقط ([`YtDlpEngine`](app/src/main/java/com/mh/videodownloader/data/engine/YtDlpEngine.kt)) |
-| التحديث يستبدل ملف yt-dlp بينما عملية تحميل تستخدمه | `Semaphore`: كل تشغيل يأخذ تصريحًا واحدًا، والتحديث يأخذها كلها |
-| ملف محرّك تالف يبقى تالفًا للأبد | `repairingIfBroken` يعيد استخراج الملف من المورد ويعيد المحاولة مرة واحدة |
-| اختيار 1080p كان ينزل 720p حين يكون 1080p بصيغة VP9/AV1 فقط | `-S res:N,vcodec:h264` — الدقة أولا ثم الترميز، بدل `[ext=mp4]` داخل المحدد |
-| مقطع تيك توك 720x1280 كان يعرض كـ 1080p | الجودة تحسب من الضلع الأقصر، كما يفعل `res` في yt-dlp |
-| الأرقام اللاتينية تنقلب داخل سطر عربي | `ltr()` يغلّفها بـ bidi isolate فتبقى `~28.5 MB` لا `MB 28.5~` |
+| Engine | [youtubedl-android](https://github.com/JunkFood02/youtubedl-android) — yt-dlp + ffmpeg + Python, bundled |
+| UI | Kotlin 2.2 · Jetpack Compose · Material 3 |
+| SDK | `compileSdk`/`targetSdk` 36 (Android 16), `minSdk` 26 (Android 8.0) |
+| Storage | Room (history) · DataStore (settings) · Storage Access Framework (real folders) · MediaStore |
+| Media | Media3 / ExoPlayer · Coil 3 |
 
-## المعمارية
+## 🙏 Credits
 
-```text
-UI (Compose)        HomeScreen · HistoryScreen · SettingsScreen
-ViewModel           HomeViewModel · HistoryViewModel · SettingsViewModel
-Domain              SourceDetector · FormatSelector · Models
-Data                MediaRepository · DownloadQueue · MediaStoreSaver · Room · DataStore
-Infra               DownloadService (Foreground) · YtDlpEngine · youtubedl-android
-```
+Bolt stands on the shoulders of [yt-dlp](https://github.com/yt-dlp/yt-dlp), [FFmpeg](https://ffmpeg.org) and [youtubedl-android](https://github.com/JunkFood02/youtubedl-android).
 
-`SourceDetector` طبقة **عرض** لا استخراج: yt-dlp هو من يفهم المواقع. دورها إظهار اسم المصدر،
-ورفض الروابط غير الصالحة مبكرًا، وتمرير أي رابط صالح آخر إلى المحرّك على أي حال.
+## ⚖️ Disclaimer
 
-## التقنيات
+Bolt Downloader is a tool for personal use. You are responsible for what you download: respect copyright and the terms of service of the sites you use, and only download content you have the right to. This project is not affiliated with YouTube, Google, TikTok, Instagram, Meta, X or any other site.
 
-| الطبقة | الاختيار |
-|---|---|
-| المحرّك | `io.github.junkfood02.youtubedl-android` 0.18.1 (yt-dlp + ffmpeg + Python مضمّنة) |
-| اللغة/الواجهة | Kotlin 2.2.21 · Jetpack Compose · Material 3 (BOM 2026.02.01) |
-| البناء | AGP 8.13.2 · Gradle 8.14.5 · JDK 17 target |
-| SDK | `compileSdk` / `targetSdk` = **36** (أندرويد 16)، `minSdk` = 26 |
-| التخزين | Room 2.7 للسجل · DataStore للإعدادات · Storage Access Framework للمجلدات · MediaStore |
-| الخط | خط النظام |
+## 📄 License
 
-## البناء
+[GPL-3.0](LICENSE) — the same license as the youtubedl-android engine it's built on.
 
-يتطلب Android SDK 36 وJDK 17+ (JDK المرفق مع Android Studio يكفي).
+---
 
-```bash
-./gradlew :app:assembleDebug
-```
+## 🇸🇦 بالعربي
 
-APK للتثبيت الشخصي (موقّع، مُصغّر بـ R8):
+**Bolt Downloader** تطبيق أندرويد لتحميل الفيديو والصوت من يوتيوب وتيك توك وإنستقرام وإكس وأكثر من 1000 موقع. يعمل كل شيء على جوالك: لا خوادم ولا حسابات ولا تتبع.
 
-```bash
-./gradlew :app:assembleRelease
-```
+**أهم المميزات**
+- زر لصق واحد يلصق الرابط ويحلله فورا، أو شارك الرابط من أي تطبيق.
+- قائمة جودات حقيقية حتى 1080p و4K مع حجم كل جودة، واستخراج MP3 بصورة الغلاف.
+- تحميل قوائم التشغيل كاملة أو المقاطع التي تختارها منها.
+- مجلد لكل موقع يُنشأ تلقائيا (`YouTube/` و`TikTok/`…)، وقائمة التشغيل في مجلد باسمها.
+- مكتبة هي مجلداتك الحقيقية: إنشاء وإعادة تسمية وحذف ونقل، بالقائمة أو بتحديد عدة مقاطع وسحبها.
+- وضع لعرض كل فيديوهات الجوال، وصفحة معلومات لكل مقطع.
+- سجل لما حملته، ومسحه لا يحذف أي ملف.
+- مشغل داخلي مع التشغيل في الخلفية، والمحرك يحدث نفسه كل أسبوع.
+- عربي أولا مع دعم كامل للكتابة من اليمين، وإنجليزي، وثيم فاتح وداكن.
 
-المخرجات في `app/build/outputs/apk/release/`:
+**التثبيت:** حمل `Bolt-Downloader-arm64.apk` من [آخر إصدار](https://github.com/DrM7md/Bolt-Downloader/releases/latest)، افتحه على جوالك واسمح بتثبيت التطبيقات من مصادر غير معروفة. أول تشغيل يأخذ نحو 10 ثوان لمرة واحدة فقط.
 
-| الملف | الحجم | الاستخدام |
-|---|---|---|
-| `app-arm64-v8a-release.apk` | ~56 MB | كل الأجهزة الحديثة — **هذا ما تثبّته** |
-| `app-x86_64-release.apk` | ~59 MB | المحاكي |
-| `app-universal-release.apk` | ~110 MB | الاثنان معًا |
-
-الحجم الكبير طبيعي: Python وffmpeg مضمّنان داخل APK.
-
-### التوقيع
-
-ملف المفاتيح غير مرفوع إلى المستودع. أنشئ واحدًا مرة واحدة داخل `app/`:
-
-```bash
-keytool -genkeypair -v -keystore app/personal-release.jks -alias videodl -keyalg RSA -keysize 2048 -validity 10000 -storepass videodl -keypass videodl -dname "CN=Personal, O=Personal, C=SA"
-```
-
-يلتقطه `build.gradle.kts` تلقائيًا إن وُجد؛ وإن لم يوجد فسيخرج APK غير موقّع.
-
-### التثبيت
-
-```bash
-adb install -r app/build/outputs/apk/release/app-arm64-v8a-release.apk
-```
-
-## ملاحظات تشغيلية
-
-- **أول تشغيل** يستغرق ~10 ثوانٍ لفك ضغط Python وffmpeg؛ يظهر شريط "تهيئة المحرّك" أثناءها.
-- **"Sign in to confirm you're not a bot"** من YouTube: اضغط "تحديث المحرّك وإعادة المحاولة"
-  (يحل أغلب الحالات).
-- **إنستغرام** يحجب كثيرًا من الروابط بدون تسجيل دخول؛ اعتبره "أفضل جهد".
-- الأحجام المعروضة **تقريبية**: تُحسب من `filesize` حين يوفّره الموقع، وإلا من متوسط البتريت.
-
-## الهوية البصرية
-
-<img src="docs/icon-512.png" width="96" align="left" hspace="18" vspace="4" alt="أيقونة التطبيق">
-
-الشعار سهم تحميل داخل **حلقة تقدّم**: القوس المضيء هو الجزء المكتمل والباهت هو المتبقّي، والفتحة
-في الأسفل هي المخرج الذي ينزل منه السهم. يقول الشعار "جارٍ التحميل" لا "للأسفل" فحسب، ويبقى
-مقروءًا حتى 24 بكسل.
-
-الألوان: بنفسجي `#7C5CFF` ← `#5B3BE8` ← سماوي `#00B4D8` بتدرّج قطري.
-
-<br clear="left">
-
-| الملف | الاستخدام |
-|---|---|
-| [`ic_launcher_foreground.xml`](app/src/main/res/drawable/ic_launcher_foreground.xml) | العلامة الكاملة داخل الأيقونة المتكيّفة (adaptive icon) |
-| [`ic_launcher_monochrome.xml`](app/src/main/res/drawable/ic_launcher_monochrome.xml) | طبقة الأيقونات المُلوّنة بالنظام (Android 13+) |
-| [`ic_brand_glyph.xml`](app/src/main/res/drawable/ic_brand_glyph.xml) | نسخة مبسّطة (سهم + قاعدة) للاستخدام الصغير داخل التطبيق |
-| [`docs/icon-512.png`](docs/icon-512.png) · [`docs/banner.png`](docs/banner.png) | أصول جاهزة للعرض والمشاركة |
-
-## الترخيص والاستخدام
-
-للاستخدام الشخصي فقط. تحميل المحتوى قد يخالف شروط استخدام المواقع؛ القرار وتبعاته على المستخدم.
-لا تضف مشاركة الملفات ولا تجاوز المحتوى المدفوع.
-
-وثيقة المتطلبات والتصميم الأصلية: [`video-downloader-android-spec.md`](video-downloader-android-spec.md).
+**تنبيه:** التطبيق للاستخدام الشخصي، وأنت مسؤول عما تحمله. احترم حقوق المحتوى وشروط المواقع.
